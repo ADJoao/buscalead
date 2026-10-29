@@ -12,5 +12,5 @@
     "noUnusedLocals": true,
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["functions", "server", "src/lib/shared"]
+  "include": ["functions", "server", "worker", "src/lib/shared"]
 }

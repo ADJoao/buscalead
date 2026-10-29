@@ -14,10 +14,14 @@ export async function sbFetch(env: Env, token: string, path: string, init: Reque
 }
 
 export async function verifyUser(env: Env, token: string): Promise<string | null> {
-  const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: env.SUPABASE_ANON_KEY ?? '', authorization: `Bearer ${token}` },
-  })
-  if (!res.ok) return null
-  const u = (await res.json()) as { id?: string }
-  return u.id ?? null
+  try {
+    const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: env.SUPABASE_ANON_KEY ?? '', authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return null
+    const u = (await res.json()) as { id?: string }
+    return u.id ?? null
+  } catch {
+    return null // Supabase fora do ar ou URL errada: trata como não logado
+  }
 }

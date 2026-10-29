@@ -4,6 +4,7 @@ import { verifyUser } from '../../server/supabaseRest'
 // Toda rota /api exige login no Supabase. Isso impede que alguém use suas chaves do Google/Anthropic.
 export const onRequest: PagesFunction<Env, string, AuthData> = async (ctx) => {
   const { env, request } = ctx
+  if (new URL(request.url).pathname === '/api/config') return ctx.next()
   const supabaseOn = Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY)
 
   if (!supabaseOn) {

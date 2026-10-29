@@ -45,8 +45,8 @@ CRM pessoal de prospecção para agência de sites, SEO local e sistemas.
 
 ### 4. Cloudflare Pages (colocar no ar)
 
-1. Em <https://dash.cloudflare.com>, vá em **Workers & Pages > Create > Pages > Connect to Git** e escolha este repositório.
-2. Build command: `npm run build`. Build output directory: `dist`.
+1. Em <https://dash.cloudflare.com>, vá em **Workers & Pages > Create application > Import a repository** e escolha este repositório. A tela de Worker já vem com `npm run build` e `npx wrangler deploy`, que é o que o projeto usa. Deixe assim.
+2. Se você usar Cloudflare Pages em vez de Worker, também funciona (build `npm run build`, saída `dist`).
 3. Em **Settings > Variables and Secrets**, adicione:
 
 | Nome | Valor |

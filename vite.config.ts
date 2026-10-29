@@ -8,6 +8,7 @@ export default defineConfig({
     proxy: { '/api': 'http://localhost:8788' },
   },
   build: {
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         manualChunks: {
