@@ -1,0 +1,7 @@
+# Backend (Cloudflare Pages > Settings > Variables and Secrets, ou .dev.vars em dev)
+GOOGLE_PLACES_API_KEY=
+ANTHROPIC_API_KEY=
+SUPABASE_URL=https://SEU-PROJETO.supabase.co
+SUPABASE_ANON_KEY=sua-anon-key
+# Só para testar localmente sem Supabase:
+# ALLOW_NO_AUTH=true
