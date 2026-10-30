@@ -64,6 +64,8 @@ export interface Lead {
   timeline: TimelineEvent[]
   ai?: { analysis: AiAnalysis; meta: AiRunMeta }
   customMessage?: string
+  /** site que você fez para o cliente */
+  deliveredSite?: string
   /** resultado de busca que já está salvo no CRM */
   inCrm?: boolean
   demo?: boolean

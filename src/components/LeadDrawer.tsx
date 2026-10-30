@@ -152,7 +152,8 @@ function Header({ lead, saved }: { lead: Lead; saved: boolean }) {
           <a className="btn sm" href={`https://instagram.com/${insta}`} target="_blank" rel="noreferrer"><AtSign size={15} /> @{insta}</a>
         )}
         {lead.mapsUrl && <a className="btn sm" href={lead.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={15} /> Maps</a>}
-        {lead.website && <a className="btn sm" href={lead.website} target="_blank" rel="noreferrer"><Globe size={15} /> Site</a>}
+        {lead.website && <a className="btn sm" href={lead.website} target="_blank" rel="noreferrer"><Globe size={15} /> {lead.deliveredSite ? 'Site antigo' : 'Site'}</a>}
+        {lead.deliveredSite && <a className="btn sm" href={lead.deliveredSite} target="_blank" rel="noreferrer" style={{ borderColor: 'var(--accent-line)', color: 'var(--accent-2)' }}><Globe size={15} /> Site que você fez</a>}
       </div>
     </div>
   )

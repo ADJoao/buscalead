@@ -15,6 +15,12 @@ function toIntl(phone: string, market: Market): string | undefined {
   return `+${d.startsWith(DDI[market]) && d.length > 11 ? d : DDI[market] + d}`
 }
 
+function url(v: string): string | undefined {
+  const t = v.trim()
+  if (!t) return undefined
+  return t.startsWith('http') ? t : `https://${t}`
+}
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
 }
@@ -32,6 +38,7 @@ export function LeadForm({ initial, defaultStage = 'fechado', onClose }: { initi
     email: initial?.email ?? '',
     instagram: initial?.instagram ?? '',
     website: initial?.website ?? '',
+    deliveredSite: initial?.deliveredSite ?? '',
     stage: initial?.stage ?? defaultStage,
     setup: String(initial?.deal.setup ?? ''),
     monthly: String(initial?.deal.monthly ?? ''),
@@ -62,7 +69,8 @@ export function LeadForm({ initial, defaultStage = 'fechado', onClose }: { initi
       phoneIntl: f.phone.trim() ? toIntl(f.phone, f.market) : undefined,
       email: f.email.trim() || undefined,
       instagram: ig,
-      website: f.website.trim() ? (f.website.startsWith('http') ? f.website.trim() : `https://${f.website.trim()}`) : undefined,
+      website: url(f.website),
+      deliveredSite: url(f.deliveredSite),
       stage: f.stage,
       notes: f.notes,
       deal: {
@@ -143,7 +151,8 @@ export function LeadForm({ initial, defaultStage = 'fechado', onClose }: { initi
           </label>
           <label className="field"><span>Instagram</span><input className="input" value={f.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="@perfil" /></label>
           <label className="field"><span>E-mail</span><input className="input" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} /></label>
-          <label className="field" style={{ gridColumn: '1 / -1' }}><span>Site</span><input className="input" value={f.website} onChange={(e) => set('website', e.target.value)} placeholder="Deixe vazio se não tiver" /></label>
+          <label className="field"><span>Site que ele tinha antes</span><input className="input" value={f.website} onChange={(e) => set('website', e.target.value)} placeholder="Vazio se não tinha" /></label>
+          <label className="field"><span>Site que você fez</span><input className="input" value={f.deliveredSite} onChange={(e) => set('deliveredSite', e.target.value)} placeholder="Vazio se ainda não entregou" /></label>
         </div>
 
         <div className="block mt">
