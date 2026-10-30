@@ -8,7 +8,7 @@ import { useStore } from '../lib/store'
 
 export function Settings() {
   const { settings, saveSettings, mode } = useStore()
-  const [status, setStatus] = useState<{ google: boolean; anthropic: boolean; supabase: boolean } | null | 'loading'>('loading')
+  const [status, setStatus] = useState<{ google: boolean; apify: boolean; anthropic: boolean; supabase: boolean } | null | 'loading'>('loading')
   const [spendUsd, setSpendUsd] = useState<number | null>(null)
   const [form, setForm] = useState(settings)
   useEffect(() => setForm(settings), [settings])
@@ -50,7 +50,7 @@ export function Settings() {
             </div>
           ) : (
             <>
-              <Item ok={status.google} label="Google Places" hint="GOOGLE_PLACES_API_KEY: busca de empresas" />
+              <Item ok={status.apify || status.google} label="Busca de empresas" hint={status.apify ? 'Apify (APIFY_TOKEN)' : status.google ? 'Google Places (GOOGLE_PLACES_API_KEY)' : 'Configure APIFY_TOKEN ou GOOGLE_PLACES_API_KEY'} />
               <Item ok={status.anthropic} label="Anthropic (Claude)" hint="ANTHROPIC_API_KEY: análise profunda" />
               <Item ok={status.supabase && mode === 'supabase'} label="Supabase" hint={mode === 'supabase' ? 'Dados sincronizados entre celular e PC' : 'Modo local: dados só neste navegador'} />
             </>

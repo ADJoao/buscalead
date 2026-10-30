@@ -1,4 +1,4 @@
-import { inspectSites, placesUsage, searchPlaces } from './api'
+import { inspectSites, placesUsage, searchPlaces, searchPlacesBatch } from './api'
 import { CITIES, MARKET_INFO, type City } from './locations'
 import { NICHE_BY_ID, guessNiche } from './niches'
 import { exclusionReason, scoreLead, type FilterRules } from './scoring'
@@ -16,6 +16,7 @@ export interface SearchParams {
   allTerms: boolean
   rules: FilterRules
   existingPlaceIds: Set<string>
+  provider?: 'apify' | 'google'
 }
 
 export interface SearchQuery {
@@ -101,20 +102,37 @@ export async function runSearch(
   const region = MARKET_INFO[params.market].region
 
   onProgress({ phase: 'google', done: 0, total: queries.length, found: 0, label: 'Buscando no Google Maps…' })
-  await pool(queries, 3, async (q) => {
-    if (signal.cancelled) return
+  if (params.provider === 'apify') {
+    // Apify: uma única execução com todas as buscas (a chamada leva de 1 a 3 minutos)
     try {
-      const r = await searchPlaces(q.text, lang, region, params.depth)
-      googleRequests += r.requests
+      const r = await searchPlacesBatch(queries.map((q) => q.text), lang, region, params.depth)
+      googleRequests = r.requests
       placesUsage(r.requests)
-      for (const p of r.places) if (!found.has(p.placeId)) found.set(p.placeId, { place: p, nicheId: q.nicheId, city: q.city })
+      for (const p of r.places) {
+        if (found.has(p.placeId)) continue
+        const q = queries.find((x) => x.text === p.searchString) ?? queries[0]
+        found.set(p.placeId, { place: p, nicheId: q.nicheId, city: q.city })
+      }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      if (!errors.includes(msg)) errors.push(msg)
+      errors.push(e instanceof Error ? e.message : String(e))
     }
-    done++
-    onProgress({ phase: 'google', done, total: queries.length, found: found.size, label: q.text })
-  })
+    onProgress({ phase: 'google', done: queries.length, total: queries.length, found: found.size, label: 'Busca concluída' })
+  } else {
+    await pool(queries, 3, async (q) => {
+      if (signal.cancelled) return
+      try {
+        const r = await searchPlaces(q.text, lang, region, params.depth)
+        googleRequests += r.requests
+        placesUsage(r.requests)
+        for (const p of r.places) if (!found.has(p.placeId)) found.set(p.placeId, { place: p, nicheId: q.nicheId, city: q.city })
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        if (!errors.includes(msg)) errors.push(msg)
+      }
+      done++
+      onProgress({ phase: 'google', done, total: queries.length, found: found.size, label: q.text })
+    })
+  }
 
   // 1º filtro (antes de abrir sites): reputação, franquias, fechados
   const removed: Removed[] = []

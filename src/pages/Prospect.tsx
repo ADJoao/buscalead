@@ -2,7 +2,7 @@ import { ArrowUp, ChevronDown, Crosshair, Filter, Loader2, Pickaxe, Radar, Save,
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { LeadListHead, LeadRow } from '../components/LeadRow'
 import { Empty, ScoreRing, SectionHead, SiteChip, Stars, Switch } from '../components/ui'
-import { placesUsage } from '../lib/api'
+import { placesUsage, serverStatus } from '../lib/api'
 import { money, num } from '../lib/format'
 import { CITIES, MARKET_INFO } from '../lib/locations'
 import { NICHES, PACKAGES, bestNiches } from '../lib/niches'
@@ -52,6 +52,10 @@ export function Prospect() {
   const [recLimit, setRecLimit] = useState(20)
   const [showRemoved, setShowRemoved] = useState(false)
   const [usage, setUsage] = useState(placesUsage())
+  const [provider, setProvider] = useState<'apify' | 'google'>('google')
+  useEffect(() => {
+    serverStatus().then((s) => s && setProvider(s.apify ? 'apify' : 'google'))
+  }, [])
 
   const cities = CITIES.filter((c) => c.market === market)
   const lagos = cityIds.some((id) => CITIES.find((c) => c.id === id)?.lagos)
@@ -72,12 +76,14 @@ export function Prospect() {
 
   const params: SearchParams = {
     market, cityIds, customCity, areas, nicheIds, depth: 1, allTerms,
-    rules: { minReviews, minRating, includeWeakSites: includeWeak }, existingPlaceIds: existing,
+    rules: { minReviews, minRating, includeWeakSites: includeWeak }, existingPlaceIds: existing, provider,
   }
   const queries = buildQueries(params)
   // cerca de 25% do que o Google devolve passa nos filtros: calculamos quantas páginas buscar
   const depth = Math.max(1, Math.min(3, Math.ceil(target / 0.25 / Math.max(1, queries.length * 20)))) as 1 | 2 | 3
   const estRequests = queries.length * depth
+  // Apify cobra por empresa encontrada (≈ US$ 0,005 no pior caso); o Google, por requisição.
+  const estApifyUsd = queries.length * depth * 20 * 0.005
 
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
@@ -133,16 +139,16 @@ export function Prospect() {
     <>
       <div className="page-head">
         <div>
-          <div className="eyebrow"><span className="pulse" /> Busca em tempo real no Google Maps · grátis</div>
+          <div className="eyebrow"><span className="pulse" /> Busca em tempo real no Google Maps</div>
           <h1 className="page-title">Buscar leads</h1>
           <p className="page-sub">Pesquisa, tira o que é ruim e ranqueia os melhores para você abordar.</p>
         </div>
         <div className="glass" style={{ padding: '10px 14px', borderRadius: 14, minWidth: 220 }}>
           <div className="row spread" style={{ fontSize: 12 }}>
-            <span className="muted">Cota grátis do Google (mês)</span>
-            <span className="mono">{num(usage)}/{num(FREE_QUOTA)}</span>
+            <span className="muted">{provider === 'apify' ? 'Empresas buscadas (mês)' : 'Cota grátis do Google (mês)'}</span>
+            <span className="mono">{provider === 'apify' ? num(usage) : `${num(usage)}/${num(FREE_QUOTA)}`}</span>
           </div>
-          <div className="bar mt-s"><i style={{ width: `${Math.min(100, (usage / FREE_QUOTA) * 100)}%` }} /></div>
+          {provider === 'google' && <div className="bar mt-s"><i style={{ width: `${Math.min(100, (usage / FREE_QUOTA) * 100)}%` }} /></div>}
         </div>
       </div>
 
@@ -220,7 +226,11 @@ export function Prospect() {
           <button className="btn ghost sm" onClick={() => setShowFilters((v) => !v)}><Filter size={14} /> Filtros de qualidade <ChevronDown size={14} /></button>
           <div style={{ flex: 1 }} />
           <div className="dim" style={{ fontSize: 12.5, textAlign: 'right' }}>
-            {queries.length} busca(s) × {depth} página(s) ≈ <b className="mono" style={{ color: 'var(--text)' }}>{estRequests}</b> da cota grátis
+            {provider === 'apify' ? (
+              <>até {queries.length * depth * 20} empresas ≈ <b className="mono" style={{ color: 'var(--text)' }}>US$ {estApifyUsd.toFixed(2)}</b> do crédito grátis do Apify</>
+            ) : (
+              <>{queries.length} busca(s) × {depth} página(s) ≈ <b className="mono" style={{ color: 'var(--text)' }}>{estRequests}</b> da cota grátis</>
+            )}
           </div>
           {running ? (
             <button className="btn lg" onClick={() => { cancel.current.cancelled = true }}><Square size={15} /> Parar</button>

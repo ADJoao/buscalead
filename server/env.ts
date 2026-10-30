@@ -1,5 +1,6 @@
 export interface Env {
   GOOGLE_PLACES_API_KEY?: string
+  APIFY_TOKEN?: string
   ANTHROPIC_API_KEY?: string
   SUPABASE_URL?: string
   SUPABASE_ANON_KEY?: string

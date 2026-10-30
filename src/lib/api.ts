@@ -23,8 +23,14 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return data
 }
 
+export type PlaceHit = PlaceResult & { searchString?: string }
+
 export function searchPlaces(query: string, languageCode: string, regionCode: string, pages: number) {
-  return post<{ places: PlaceResult[]; requests: number }>('/api/places', { query, languageCode, regionCode, pages })
+  return post<{ places: PlaceHit[]; requests: number; provider: 'apify' | 'google' }>('/api/places', { query, languageCode, regionCode, pages })
+}
+
+export function searchPlacesBatch(queries: string[], languageCode: string, regionCode: string, pages: number) {
+  return post<{ places: PlaceHit[]; requests: number; provider: 'apify' | 'google' }>('/api/places', { queries, languageCode, regionCode, pages })
 }
 
 export function inspectSites(urls: string[]) {
@@ -35,7 +41,7 @@ export function analyzeLead(req: AnalyzeRequest) {
   return post<AnalyzeResponse>('/api/analyze', req)
 }
 
-export async function serverStatus(): Promise<{ google: boolean; anthropic: boolean; supabase: boolean } | null> {
+export async function serverStatus(): Promise<{ google: boolean; apify: boolean; anthropic: boolean; supabase: boolean } | null> {
   try {
     const res = await fetch('/api/status', { headers: await authHeaders() })
     if (!res.ok) return null
