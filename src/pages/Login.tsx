@@ -15,10 +15,10 @@ export function Login() {
     setBusy(true)
     setErr('')
     const { error } = signup
-      ? await supabase.auth.signUp({ email, password })
+      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } })
       : await supabase.auth.signInWithPassword({ email, password })
     if (error) setErr(error.message)
-    else if (signup) setErr('Conta criada. Se pedir confirmação, confira seu e-mail e depois entre.')
+    else if (signup) setErr('Conta criada. Se pedir confirmação, confira seu e-mail. Depois de clicar no link, volte aqui e use Entrar.')
     setBusy(false)
   }
 
