@@ -78,7 +78,7 @@ export const NICHES: Niche[] = [
     seo: ['pousada em Cabo Frio', 'pousada pé na areia', 'pousada barata'],
   },
   {
-    id: 'passeio', label: 'Passeio de barco / turismo', emoji: '⛵', tier: 'A', lagos: true,
+    id: 'passeio', label: 'Passeio de barco / turismo', emoji: '⛵', tier: 'B', lagos: true,
     queries: { 'pt-BR': ['passeio de barco', 'agência de turismo receptivo'], 'pt-PT': ['passeio de barco', 'tours'], en: ['boat tour', 'tour operator'] },
     package: 'SISTEMA', system: 'Reserva online com pagamento antecipado + site em 3 idiomas',
     why: 'Turista decide no celular, na véspera. Quem aparece primeiro com reserva fácil leva.',
@@ -88,7 +88,7 @@ export const NICHES: Niche[] = [
     seo: ['passeio de barco Arraial do Cabo', 'passeio de escuna', 'buggy Cabo Frio'],
   },
   {
-    id: 'imobiliaria', label: 'Imobiliária / corretor', emoji: '🏠', tier: 'A', lagos: true,
+    id: 'imobiliaria', label: 'Imobiliária / corretor', emoji: '🏠', tier: 'C', lagos: true,
     queries: { 'pt-BR': ['imobiliária'], 'pt-PT': ['imobiliária', 'mediação imobiliária'], en: ['real estate agency'] },
     package: 'SISTEMA', system: 'Catálogo de imóveis com filtros + CRM de leads + aluguel por temporada',
     why: 'Uma comissão de venda paga anos de mensalidade. Na Região dos Lagos, temporada é dinheiro rápido.',
@@ -120,7 +120,7 @@ export const NICHES: Niche[] = [
     compliance: 'CFM/COFFITO: sem antes e depois e sem promessa de cura',
   },
   {
-    id: 'solar', label: 'Energia solar', emoji: '☀️', tier: 'A',
+    id: 'solar', label: 'Energia solar', emoji: '☀️', tier: 'B',
     queries: { 'pt-BR': ['energia solar', 'instalação de painel solar'], 'pt-PT': ['painéis solares', 'energia solar'], en: ['solar installer'] },
     package: 'SISTEMA', system: 'Simulador de economia na conta de luz + captação de leads + CRM',
     why: 'Ticket de R$ 15–40 mil por instalação. Um único lead fechado paga o sistema por anos.',
@@ -140,7 +140,7 @@ export const NICHES: Niche[] = [
     seo: ['móveis planejados', 'cozinha planejada', 'arquiteto'],
   },
   {
-    id: 'eventos', label: 'Buffet / casa de festas', emoji: '🎉', tier: 'A',
+    id: 'eventos', label: 'Buffet / casa de festas', emoji: '🎉', tier: 'B',
     queries: { 'pt-BR': ['buffet', 'casa de festas', 'espaço para eventos'], 'pt-PT': ['quinta para eventos', 'catering'], en: ['event venue', 'catering'] },
     package: 'SISTEMA', system: 'Agenda de datas disponíveis + orçamento online + CRM de festas',
     why: 'Eventos de R$ 5–50 mil. Quem responde orçamento primeiro fecha.',
@@ -151,7 +151,7 @@ export const NICHES: Niche[] = [
   },
   {
     id: 'escola', label: 'Curso / escola de idiomas', emoji: '🎓', tier: 'B',
-    queries: { 'pt-BR': ['escola de inglês', 'curso profissionalizante', 'autoescola'], 'pt-PT': ['escola de línguas', 'centro de explicações'], en: ['language school', 'tutoring center'] },
+    queries: { 'pt-BR': ['escola de inglês', 'curso profissionalizante'], 'pt-PT': ['escola de línguas', 'centro de explicações'], en: ['language school', 'tutoring center'] },
     package: 'SITE', system: 'Página de matrícula + aula experimental + CRM de alunos',
     why: 'Mensalidade recorrente do aluno. Cada matrícula vale meses de receita.',
     pains: ['Concorrência das franquias', 'Interessado que pede info e some', 'Matrícula ainda no papel'],
@@ -160,7 +160,7 @@ export const NICHES: Niche[] = [
     seo: ['curso de inglês', 'autoescola', 'reforço escolar'],
   },
   {
-    id: 'restaurante', label: 'Restaurante', emoji: '🍽️', tier: 'B', lagos: true,
+    id: 'restaurante', label: 'Restaurante', emoji: '🍽️', tier: 'C', lagos: true,
     queries: { 'pt-BR': ['restaurante'], 'pt-PT': ['restaurante'], en: ['restaurant'] },
     package: 'SISTEMA', system: 'Cardápio digital + pedido direto no WhatsApp (sem a comissão do iFood) + reservas',
     why: 'O iFood leva 12–27% de cada pedido. Pedido direto é margem que volta.',
@@ -170,7 +170,7 @@ export const NICHES: Niche[] = [
     seo: ['restaurante em Cabo Frio', 'frutos do mar', 'delivery'],
   },
   {
-    id: 'academia', label: 'Academia / studio', emoji: '🏋️', tier: 'B',
+    id: 'academia', label: 'Academia / studio', emoji: '🏋️', tier: 'C',
     queries: { 'pt-BR': ['studio de pilates', 'academia', 'crossfit'], 'pt-PT': ['estúdio de pilates', 'ginásio'], en: ['pilates studio', 'gym'] },
     package: 'SITE', system: 'Aula experimental com agendamento + planos + CRM de alunos',
     why: 'Recorrência. Cada aluno novo rende mensalidade por meses.',
@@ -210,6 +210,16 @@ export const NICHES: Niche[] = [
     seo: ['instalação de ar condicionado', 'limpeza de piscina', 'dedetização'],
   },
   {
+    id: 'urgencia', label: 'Desentupidora / chaveiro / guincho', emoji: '🚨', tier: 'A',
+    queries: { 'pt-BR': ['desentupidora', 'chaveiro 24 horas', 'guincho'], 'pt-PT': ['desentupimentos', 'serralheiro 24 horas', 'reboque'], en: ['plumber emergency', 'locksmith 24 hour', 'towing service'] },
+    package: 'SITE', system: 'Site de SEO local por bairro + botão de ligar/WhatsApp (tira a dependência do Google Ads)',
+    why: 'Busca de urgência: quem aparece primeiro no Google leva. O clique no Google Ads para "desentupidora" chega a R$ 85–98 em SP, então cada cliente que vem do SEO é dinheiro economizado.',
+    pains: ['Paga caro no Google Ads ou depende de indicação', 'Quem procura com urgência liga para o primeiro que aparece no Google', 'Não aparece quando o cliente pesquisa o serviço no bairro dele'],
+    deliverables: ['Página por serviço e por bairro atendido', 'Botão de ligar e de WhatsApp fixo no celular', 'Avaliações do Google em destaque', 'Ficha do Google otimizada'],
+    hook: 'quem está com o problema agora, pesquisa no Google e liga para o primeiro número que aparece',
+    seo: ['desentupidora 24 horas', 'chaveiro perto de mim', 'guincho 24h'],
+  },
+  {
     id: 'beleza', label: 'Salão de beleza / barbearia', emoji: '💈', tier: 'C',
     queries: { 'pt-BR': ['salão de beleza', 'barbearia'], 'pt-PT': ['cabeleireiro', 'barbearia'], en: ['hair salon', 'barbershop'] },
     package: 'LP', system: 'Agendamento online próprio (sem taxa de app)',
@@ -220,7 +230,7 @@ export const NICHES: Niche[] = [
     seo: ['salão de beleza', 'barbearia', 'manicure'],
   },
   {
-    id: 'contabilidade', label: 'Contabilidade', emoji: '📊', tier: 'B',
+    id: 'contabilidade', label: 'Contabilidade', emoji: '📊', tier: 'C',
     queries: { 'pt-BR': ['escritório de contabilidade'], 'pt-PT': ['contabilista'], en: ['accounting firm', 'tax preparer'] },
     package: 'SITE', system: 'Captação de MEI / abertura de empresa + área do cliente',
     why: 'Honorário mensal recorrente por cliente.',
@@ -240,9 +250,9 @@ export const NICHES: Niche[] = [
     seo: ['ótica', 'exame de vista', 'óculos de grau'],
   },
   {
-    id: 'construcao', label: 'Marmoraria / vidraçaria / serralheria', emoji: '🧱', tier: 'B',
+    id: 'construcao', label: 'Marmoraria / vidraçaria / serralheria', emoji: '🧱', tier: 'A',
     queries: { 'pt-BR': ['marmoraria', 'vidraçaria', 'serralheria'], 'pt-PT': ['marmorista', 'vidraceiro'], en: ['countertop fabricator', 'glass company'] },
-    package: 'LP', system: 'Orçamento com fotos e medidas + catálogo de trabalhos',
+    package: 'SITE', system: 'Portfólio de obras + orçamento com fotos e medidas',
     why: 'Serviços de R$ 2–20 mil. Cliente compara 3 orçamentos.',
     pains: ['Orçamentos que não voltam', 'Portfólio desorganizado', 'Concorrência por preço'],
     deliverables: ['Orçamento com envio de medidas', 'Galeria de trabalhos', 'SEO por serviço'],
@@ -279,6 +289,7 @@ export function guessNiche(types: string[], name: string): string | undefined {
   if (t.has('gym') || t.has('fitness_center') || /pilates|academia|crossfit/.test(n)) return 'academia'
   if (t.has('car_repair') || t.has('car_wash') || /oficina|auto|mecânic/.test(n)) return 'automotivo'
   if (t.has('accounting') || /contab/.test(n)) return 'contabilidade'
+  if (/desentup|chaveiro|guincho|reboque/.test(n) || t.has('locksmith') || t.has('plumber')) return 'urgencia'
   if (/solar/.test(n)) return 'solar'
   if (/planejad|arquitet/.test(n)) return 'arquitetura'
   if (/buffet|festa|evento/.test(n)) return 'eventos'
