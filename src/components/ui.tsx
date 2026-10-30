@@ -57,7 +57,8 @@ export function Stars({ rating, reviews }: { rating?: number; reviews?: number }
   )
 }
 
-export function StageTag({ stage }: { stage: Stage }) {
+export function StageTag({ stage, canceled }: { stage: Stage; canceled?: boolean }) {
+  if (stage === 'fechado' && canceled) return <span className="tag red">Cancelado</span>
   const cls: Record<Stage, string> = {
     novo: '', contatado: 'blue', respondeu: 'violet', reuniao: 'amber', proposta: 'amber', fechado: 'lime', perdido: 'red',
   }

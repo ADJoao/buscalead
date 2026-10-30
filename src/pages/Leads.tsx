@@ -151,7 +151,7 @@ export function Leads() {
             onSelect={(v) => setSelected((s) => { const n = new Set(s); if (v) n.add(l.id); else n.delete(l.id); return n })}
             third={
               <div className="col" style={{ gap: 4, alignItems: 'flex-start' }}>
-                <StageTag stage={l.stage} />
+                <StageTag stage={l.stage} canceled={!!l.deal.canceledAt} />
                 <span className="dim mono" style={{ fontSize: 12 }}>{money(l.deal.setup ?? l.setupRange[0], l.currency)}</span>
               </div>
             }

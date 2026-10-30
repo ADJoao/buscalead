@@ -43,6 +43,7 @@ export function LeadForm({ initial, defaultStage = 'fechado', onClose }: { initi
     setup: String(initial?.deal.setup ?? ''),
     monthly: String(initial?.deal.monthly ?? ''),
     closedAt: (initial?.deal.closedAt ?? new Date().toISOString()).slice(0, 10),
+    canceledAt: (initial?.deal.canceledAt ?? '').slice(0, 10),
     notes: initial?.notes ?? '',
   })
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }))
@@ -77,6 +78,7 @@ export function LeadForm({ initial, defaultStage = 'fechado', onClose }: { initi
         setup: f.setup ? Number(f.setup) : undefined,
         monthly: f.monthly ? Number(f.monthly) : undefined,
         closedAt,
+        canceledAt: f.stage === 'fechado' && f.canceledAt ? new Date(`${f.canceledAt}T12:00:00`).toISOString() : undefined,
       },
     }
     if (f.stage !== 'novo' && !initial?.contactedAt) data.contactedAt = now
@@ -168,7 +170,12 @@ export function LeadForm({ initial, defaultStage = 'fechado', onClose }: { initi
               <input className="input" type="date" value={f.closedAt} disabled={f.stage !== 'fechado'} onChange={(e) => set('closedAt', e.target.value)} />
             </label>
           </div>
-          <div className="dim mt-s" style={{ fontSize: 12 }}>A data de fechamento define em que mês o setup entra no faturamento e a partir de quando a mensalidade conta.</div>
+          {f.stage === 'fechado' && (
+            <label className="field mt-s" style={{ maxWidth: 260 }}><span>Cancelou em (deixe vazio se continua cliente)</span>
+              <input className="input" type="date" value={f.canceledAt} onChange={(e) => set('canceledAt', e.target.value)} />
+            </label>
+          )}
+          <div className="dim mt-s" style={{ fontSize: 12 }}>A mensalidade conta do mês de fechamento até o mês do cancelamento. O setup entra só no mês de fechamento.</div>
         </div>
 
         <label className="field mt"><span>Anotações</span>

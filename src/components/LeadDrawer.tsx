@@ -93,7 +93,7 @@ function Header({ lead, saved }: { lead: Lead; saved: boolean }) {
             <div className="row wrap" style={{ gap: 8 }}>
               <TierBadge tier={lead.tier} />
               <SiteChip status={lead.siteStatus} />
-              {saved && <StageTag stage={lead.stage} />}
+              {saved && <StageTag stage={lead.stage} canceled={!!lead.deal.canceledAt} />}
               {lead.demo && <span className="demo-badge">DEMO</span>}
             </div>
             <h2 style={{ margin: '8px 0 2px', fontSize: 21, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{lead.name}</h2>
@@ -516,10 +516,17 @@ function CrmTab({ lead }: { lead: Lead }) {
           </label>
         </div>
         {lead.stage === 'fechado' && (
-          <label className="field mt-s" style={{ maxWidth: 220 }}><span>Data de fechamento</span>
-            <input type="date" className="input" value={(lead.deal.closedAt ?? '').slice(0, 10)}
-              onChange={(e) => e.target.value && updateLead(lead.id, { deal: { ...lead.deal, closedAt: new Date(`${e.target.value}T12:00:00`).toISOString() } })} />
-          </label>
+          <div className="grid g-2 mt-s" style={{ gap: 12 }}>
+            <label className="field"><span>Data de fechamento</span>
+              <input type="date" className="input" value={(lead.deal.closedAt ?? '').slice(0, 10)}
+                onChange={(e) => e.target.value && updateLead(lead.id, { deal: { ...lead.deal, closedAt: new Date(`${e.target.value}T12:00:00`).toISOString() } })} />
+            </label>
+            <label className="field"><span>Cancelou em (vazio = ativo)</span>
+              <input type="date" className="input" value={(lead.deal.canceledAt ?? '').slice(0, 10)}
+                onChange={(e) => updateLead(lead.id, { deal: { ...lead.deal, canceledAt: e.target.value ? new Date(`${e.target.value}T12:00:00`).toISOString() : undefined } },
+                  e.target.value ? { type: 'etapa', text: `Cliente cancelou em ${e.target.value.split('-').reverse().join('/')}` } : undefined)} />
+            </label>
+          </div>
         )}
       </div>
 

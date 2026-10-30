@@ -1,6 +1,7 @@
-import { Loader2 } from 'lucide-react'
+import { useCallback, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { Splash } from './components/Splash'
 import { useStore } from './lib/store'
 import { Dashboard } from './pages/Dashboard'
 import { Leads } from './pages/Leads'
@@ -11,11 +12,12 @@ import { Prospect } from './pages/Prospect'
 import { Settings } from './pages/Settings'
 
 export function App() {
-  const { mode, session, authReady, loading } = useStore()
-  if (!authReady || (loading && (mode === 'local' || session))) {
-    return <div style={{ height: '100%', display: 'grid', placeItems: 'center' }}><Loader2 className="spin accent" /></div>
-  }
-  if (mode === 'supabase' && !session) return <Login />
+  const { mode, session, authReady, loading, settings } = useStore()
+  const [splashDone, setSplashDone] = useState(false)
+  const done = useCallback(() => setSplashDone(true), [])
+  if (authReady && mode === 'supabase' && !session) return <Login />
+  const ready = authReady && !loading
+  if (!splashDone) return <Splash ready={ready} name={settings.ownerName} onDone={done} />
   return (
     <BrowserRouter>
       <Routes>

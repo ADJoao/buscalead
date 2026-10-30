@@ -1,13 +1,13 @@
 import { ArrowUpRight, BadgeDollarSign, CalendarClock, ChevronLeft, ChevronRight, Flame, Handshake, Percent, Plus, Radar, Repeat, Target, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useRef, useState } from 'react'
+import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { LeadForm } from '../components/LeadForm'
 import { ScoreRing } from '../components/ui'
 import { money, num, pct } from '../lib/format'
 import { focusList } from '../lib/priority'
 import { useStore } from '../lib/store'
-import { STAGES, type Lead, type Settings } from '../lib/types'
+import { STAGES, isActiveClient, type Lead, type Settings } from '../lib/types'
 
 const ORDER = STAGES.map((s) => s.id)
 
@@ -48,8 +48,11 @@ function ChartTip({ active, payload, label }: TipProps) {
 export function Dashboard() {
   const { leads, settings, openLead } = useStore()
   const now = new Date()
+  // todos que já foram clientes (inclui cancelados) e os que ainda pagam
   const closed = leads.filter((l) => l.stage === 'fechado')
-  const mrr = closed.reduce((s, l) => s + toBRL(l.deal.monthly ?? 0, l.currency, settings), 0)
+  const active = closed.filter((l) => isActiveClient(l, now))
+  const canceledCount = closed.length - active.length
+  const mrr = active.reduce((s, l) => s + toBRL(l.deal.monthly ?? 0, l.currency, settings), 0)
   const sameMonth = (iso?: string) => {
     if (!iso) return false
     const d = new Date(iso)
@@ -78,7 +81,9 @@ export function Dashboard() {
     for (const l of closed) {
       if (!l.deal.closedAt) continue
       const c = new Date(l.deal.closedAt)
-      if (c <= end) mensal += toBRL(l.deal.monthly ?? 0, l.currency, settings)
+      // mensalidade conta do mês de fechamento até o mês do cancelamento
+      const cancel = l.deal.canceledAt ? new Date(l.deal.canceledAt) : null
+      if (c <= end && (!cancel || cancel >= d)) mensal += toBRL(l.deal.monthly ?? 0, l.currency, settings)
       if (c.getMonth() === d.getMonth() && c.getFullYear() === d.getFullYear()) {
         setup += toBRL(l.deal.setup ?? 0, l.currency, settings)
         novos++
@@ -86,9 +91,23 @@ export function Dashboard() {
     }
     return { mensal, setup, novos }
   }
-  const monthStarts = view === 'ano'
-    ? Array.from({ length: 12 }, (_, i) => new Date(year, i, 1))
-    : Array.from({ length: 12 }, (_, i) => new Date(now.getFullYear(), now.getMonth() - 11 + i, 1))
+  // o gráfico começa um mês antes do primeiro cliente e termina no mês atual (sem meses vazios sobrando)
+  const curMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const firstClose = closed
+    .map((l) => (l.deal.closedAt ? new Date(l.deal.closedAt) : null))
+    .filter((d): d is Date => d !== null)
+    .sort((a, b) => a.getTime() - b.getTime())[0]
+  const periodStart = view === 'ano' ? new Date(year, 0, 1) : new Date(now.getFullYear(), now.getMonth() - 11, 1)
+  const periodEnd = view === 'ano' && year < now.getFullYear() ? new Date(year, 11, 1) : curMonth
+  let start = firstClose ? new Date(firstClose.getFullYear(), firstClose.getMonth() - 1, 1) : new Date(periodEnd.getFullYear(), periodEnd.getMonth() - 5, 1)
+  if (start < periodStart) start = periodStart
+  const span = (periodEnd.getFullYear() - start.getFullYear()) * 12 + periodEnd.getMonth() - start.getMonth() + 1
+  if (span < 4) {
+    const back = new Date(periodEnd.getFullYear(), periodEnd.getMonth() - 3, 1)
+    start = back < periodStart ? periodStart : back
+  }
+  const monthStarts: Date[] = []
+  for (let d = new Date(start); d <= periodEnd; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) monthStarts.push(d)
   const months = monthStarts.map((d) => {
     const future = d > now
     const r = monthRevenue(d)
@@ -144,9 +163,9 @@ export function Dashboard() {
       <div className="grid kpis">
         <Kpi hero icon={<Repeat size={14} />} label="Receita recorrente (MRR)" value={money(mrr)} foot={`${pct(goalPct)} da meta de ${money(settings.mrrGoal)}`} />
         <Kpi icon={<Wallet size={14} />} label="Faturamento do mês" value={money(thisMonth.mensal + thisMonth.setup)} foot={`${money(yearTotal)} no ano de ${now.getFullYear()}`} />
-        <Kpi icon={<Handshake size={14} />} label="Clientes ativos" value={num(closed.length)} foot={`+${closedThisMonth.length} este mês`} />
+        <Kpi icon={<Handshake size={14} />} label="Clientes ativos" value={num(active.length)} foot={`+${closedThisMonth.length} este mês${canceledCount ? ` · ${canceledCount} cancelado${canceledCount > 1 ? 's' : ''}` : ''}`} />
         <Kpi icon={<Percent size={14} />} label="Conversão" value={pct(conversion)} foot={`${closed.length} de ${contacted.length} contatados`} />
-        <Kpi icon={<BadgeDollarSign size={14} />} label="Ticket médio (setup)" value={money(avgTicket)} foot={`LTV 12m ≈ ${money(avgTicket + (closed.length ? mrr / closed.length : 0) * 12)}`} />
+        <Kpi icon={<BadgeDollarSign size={14} />} label="Ticket médio (setup)" value={money(avgTicket)} foot={`LTV 12m ≈ ${money(avgTicket + (active.length ? mrr / active.length : 0) * 12)}`} />
         <Kpi icon={<Target size={14} />} label="Em negociação" value={money(pipeline, 'BRL', true)} foot="respondeu + reunião + proposta" />
       </div>
 
@@ -179,7 +198,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="legend mt-s">
-            {chart === 'linha' && <span><i style={{ background: 'var(--text)' }} />Total</span>}
+            {chart === 'linha' && <span><i style={{ background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />Total</span>}
             <span><i style={{ background: 'var(--series-3)' }} />Mensalidades</span>
             <span><i style={{ background: 'var(--series-2)' }} />Setup</span>
           </div>
@@ -195,15 +214,31 @@ export function Dashboard() {
                   <Bar dataKey="setup" name="Setup" stackId="r" fill="var(--series-2)" stroke="#0b0f0d" strokeWidth={1.5} radius={[5, 5, 0, 0]} />
                 </BarChart>
               ) : (
-                <LineChart data={months}>
-                  <CartesianGrid vertical={false} stroke="rgba(255,255,255,.06)" />
-                  <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fill: '#6f7a73', fontSize: 12 }} />
+                <ComposedChart data={months} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#b6f23a" stopOpacity={0.42} />
+                      <stop offset="55%" stopColor="#b6f23a" stopOpacity={0.12} />
+                      <stop offset="100%" stopColor="#b6f23a" stopOpacity={0} />
+                    </linearGradient>
+                    <filter id="glow" x="-20%" y="-50%" width="140%" height="200%">
+                      <feGaussianBlur stdDeviation="5" result="b" />
+                      <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="rgba(255,255,255,.05)" strokeDasharray="2 6" />
+                  <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fill: '#8a958e', fontSize: 12 }} padding={{ left: 14, right: 14 }} />
                   <YAxis tickLine={false} axisLine={false} width={64} tick={{ fill: '#6f7a73', fontSize: 11, fontFamily: 'Geist Mono' }} tickFormatter={(v: number) => money(v, 'BRL', true)} />
-                  <Tooltip content={<ChartTip />} cursor={{ stroke: 'rgba(255,255,255,.18)', strokeDasharray: '3 3' }} />
-                  <Line type="monotone" dataKey="total" name="Total" stroke="var(--text)" strokeWidth={2.5} dot={{ r: 3, fill: 'var(--text)', strokeWidth: 0 }} activeDot={{ r: 5 }} connectNulls={false} />
-                  <Line type="monotone" dataKey="mensal" name="Mensalidades" stroke="var(--series-3)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="setup" name="Setup" stroke="var(--series-2)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                </LineChart>
+                  <Tooltip content={<ChartTip />} cursor={{ stroke: 'rgba(182,242,58,.35)', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                  <Area
+                    type="monotone" dataKey="total" name="Total" stroke="#b6f23a" strokeWidth={3} fill="url(#gTotal)" filter="url(#glow)"
+                    dot={{ r: 4, fill: '#0b0f0d', stroke: '#b6f23a', strokeWidth: 2.5 }}
+                    activeDot={{ r: 7, fill: '#b6f23a', stroke: 'rgba(182,242,58,.35)', strokeWidth: 8 }}
+                    animationDuration={1100}
+                  />
+                  <Line type="monotone" dataKey="mensal" name="Mensalidades" stroke="var(--series-3)" strokeWidth={1.8} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} animationDuration={1100} />
+                  <Line type="monotone" dataKey="setup" name="Setup" stroke="var(--series-2)" strokeWidth={1.8} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} animationDuration={1100} />
+                </ComposedChart>
               )}
             </ResponsiveContainer>
           </div>
@@ -276,9 +311,9 @@ export function Dashboard() {
             <div><div className="dim" style={{ fontSize: 12 }}>Faltam</div><div className="price">{money(Math.max(0, settings.mrrGoal - mrr))}</div></div>
           </div>
           <div className="dim mt-s" style={{ fontSize: 12.5 }}>
-            {mrr < settings.mrrGoal && closed.length > 0
+            {mrr < settings.mrrGoal && active.length > 0
               ? (() => {
-                  const n = Math.ceil((settings.mrrGoal - mrr) / (mrr / closed.length))
+                  const n = Math.ceil((settings.mrrGoal - mrr) / (mrr / active.length))
                   return `Faltam ≈ ${n} cliente${n > 1 ? 's' : ''} na sua mensalidade média para bater a meta.`
                 })()
               : mrr >= settings.mrrGoal && mrr > 0 ? 'Meta batida. Hora de subir a régua.' : 'Feche o primeiro contrato para começar.'}
@@ -309,8 +344,25 @@ export function Dashboard() {
 }
 
 function Kpi({ icon, label, value, foot, hero }: { icon: React.ReactNode; label: string; value: string; foot?: string; hero?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
+  // inclina o cartão na direção do mouse e acende um brilho onde o cursor está
+  const move = (e: React.MouseEvent) => {
+    const el = ref.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width
+    const y = (e.clientY - r.top) / r.height
+    el.style.setProperty('--mx', `${x * 100}%`)
+    el.style.setProperty('--my', `${y * 100}%`)
+    el.style.setProperty('--rx', `${(0.5 - y) * 8}deg`)
+    el.style.setProperty('--ry', `${(x - 0.5) * 10}deg`)
+  }
+  const leave = () => {
+    ref.current?.style.setProperty('--rx', '0deg')
+    ref.current?.style.setProperty('--ry', '0deg')
+  }
   return (
-    <div className={`glass kpi ${hero ? 'hero glow' : ''}`}>
+    <div ref={ref} className={`glass kpi tilt ${hero ? 'hero glow' : ''}`} onMouseMove={move} onMouseLeave={leave}>
       <div className="kpi-label">{icon}{label}</div>
       <div className="kpi-value">{value}</div>
       {foot && <div className="kpi-foot">{hero && <ArrowUpRight size={12} className="accent" style={{ verticalAlign: -2 }} />} {foot}</div>}

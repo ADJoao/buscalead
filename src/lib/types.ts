@@ -56,7 +56,7 @@ export interface Lead {
   monthlyRange: [number, number]
   currency: string
 
-  deal: { setup?: number; monthly?: number; closedAt?: string }
+  deal: { setup?: number; monthly?: number; closedAt?: string; canceledAt?: string }
   contactedAt?: string
   nextActionAt?: string
   lostReason?: string
@@ -95,4 +95,9 @@ export const DEFAULT_SETTINGS: Settings = {
   minRating: 4.0,
   includeWeakSites: false,
   demoMode: false,
+}
+
+/** Cliente fechado que ainda paga (sem cancelamento, ou cancelamento no futuro). */
+export function isActiveClient(l: Lead, at = new Date()): boolean {
+  return l.stage === 'fechado' && (!l.deal.canceledAt || new Date(l.deal.canceledAt) > at)
 }
