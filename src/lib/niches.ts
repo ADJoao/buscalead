@@ -66,14 +66,16 @@ export const NICHES: Niche[] = [
     seo: ['harmonização facial', 'botox', 'limpeza de pele', 'depilação a laser'],
   },
   {
-    id: 'pousada', label: 'Pousada / hotel', emoji: '🏝️', tier: 'A', lagos: true,
+    id: 'pousada', label: 'Pousada / hotel', emoji: '🏝️', tier: 'B', lagos: true,
     queries: { 'pt-BR': ['pousada', 'hotel'], 'pt-PT': ['alojamento local', 'guest house'], en: ['boutique hotel', 'bed and breakfast'] },
-    package: 'SISTEMA', system: 'Site com reserva direta (motor de reservas) para fugir da comissão de 15–20% do Booking',
-    why: 'Cada reserva direta economiza 15–20% de comissão. Na alta temporada, o site se paga em uma semana.',
-    pains: ['Paga 15–20% de comissão ao Booking/Airbnb em cada reserva', 'Hóspede pergunta disponibilidade no WhatsApp a madrugada inteira', 'Sem site, depende das plataformas'],
-    deliverables: ['Site com fotos dos quartos e calendário de disponibilidade', 'Reserva direta com sinal via Pix', 'Versão em inglês e espanhol (turista argentino)', 'SEO "pousada em [cidade]"'],
-    hook: 'o hóspede que acha vocês no Booking e paga a comissão que poderia ficar com vocês',
-    seo: ['pousada em Cabo Frio', 'pousada pé na areia', 'hotel barato'],
+    // Pesquisa (out/2026): já existem sistemas baratos e famosos para pousada (Hospedin, Omnibees, Silbeck),
+    // então o produto certo é o site oficial ligado ao motor de reservas que ela já usa, e não um sistema próprio.
+    package: 'SITE', system: 'Site oficial com reserva direta (ligado ao motor de reservas que ela já usa, ou WhatsApp + Pix no CNPJ)',
+    why: 'Booking cobra de 15% a 18% e o Airbnb uns 16% por reserva. Cada hóspede que reserva direto devolve essa margem. Mas a temporada é forte: no inverno o dono aperta custos, então mensalidade baixa e bem justificada.',
+    pains: ['Paga de 15% a 18% de comissão ao Booking em cada reserva', 'Hóspede acha a pousada no Booking, procura no Google e não acha um site oficial para reservar direto', 'Com tanto golpe de pousada falsa, quem só atende por Instagram e pede Pix parece suspeito'],
+    deliverables: ['Site oficial com fotos dos quartos e avaliações', 'Botão de reserva ligado ao motor de reservas que ela já usa (ou WhatsApp + Pix no CNPJ)', 'Selo de confiança: CNPJ, endereço, mapa e link para as avaliações do Google', 'SEO "pousada em [cidade]" e versão em espanhol'],
+    hook: 'o hóspede que acha vocês no Booking, procura no Google para reservar direto e não encontra um site oficial',
+    seo: ['pousada em Cabo Frio', 'pousada pé na areia', 'pousada barata'],
   },
   {
     id: 'passeio', label: 'Passeio de barco / turismo', emoji: '⛵', tier: 'A', lagos: true,
