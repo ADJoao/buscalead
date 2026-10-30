@@ -1,10 +1,11 @@
-import { ArrowUp, Download, Flame, Plus, Radar, Search, Trash2, Users } from 'lucide-react'
+import { ArrowUp, ClipboardCopy, Download, Flame, Plus, Radar, Search, Trash2, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LeadForm } from '../components/LeadForm'
 import { LeadListHead, LeadRow } from '../components/LeadRow'
 import { Empty, ScoreRing, SectionHead, StageTag } from '../components/ui'
 import { money } from '../lib/format'
+import { claudeBatchPrompt } from '../lib/messages'
 import { focusList } from '../lib/priority'
 import { siteLabel } from '../lib/scoring'
 import { useStore } from '../lib/store'
@@ -85,6 +86,21 @@ export function Leads() {
         <div className="row">
           <button className="btn sm" onClick={() => setForm('novo')}><Plus size={14} /> Lead</button>
           <button className="btn sm" onClick={() => setForm('fechado')}><Plus size={14} /> Cliente</button>
+          <button
+            className="btn sm"
+            title="Copia um pedido de pesquisa profunda para colar no chat do Claude. Sem custo de API."
+            onClick={async () => {
+              const pick = selected.size ? leads.filter((l) => selected.has(l.id)).slice(0, 10) : focus.map((x) => x.lead)
+              try {
+                await navigator.clipboard.writeText(claudeBatchPrompt(pick))
+                toast(`Pedido com ${pick.length} lead(s) copiado: cole no chat do Claude`)
+              } catch {
+                toast('Não consegui copiar.', true)
+              }
+            }}
+          >
+            <ClipboardCopy size={14} /> {selected.size ? `Copiar ${Math.min(selected.size, 10)} para o Claude` : 'Copiar Top 5 para o Claude'}
+          </button>
           <button className="btn sm" onClick={exportCsv}><Download size={14} /> Exportar CSV</button>
           <Link to="/prospectar" className="btn primary sm"><Radar size={14} /> Buscar mais</Link>
         </div>
