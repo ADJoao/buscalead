@@ -28,6 +28,8 @@ export interface Niche {
   compliance?: string
   /** mínimo de avaliações no Google (negócios de poucos clientes e ticket alto têm menos avaliações) */
   minReviews?: number
+  /** nicho de empresas de brasileiros nos EUA: abordagem em português */
+  brazilianUS?: boolean
 }
 
 export const PACKAGES: Record<PackageId, { label: string; short: string }> = {
@@ -40,7 +42,7 @@ export const PACKAGES: Record<PackageId, { label: string; short: string }> = {
 export const PRICE_TABLE: Record<Market, Record<PackageId, [number, number, number, number]>> = {
   BR: { LP: [600, 900, 120, 150], SITE: [1200, 2000, 150, 200], SISTEMA: [2500, 3500, 250, 350] },
   PT: { LP: [350, 600, 40, 60], SITE: [700, 1200, 60, 90], SISTEMA: [1500, 3000, 100, 150] },
-  US: { LP: [700, 1200, 50, 90], SITE: [1500, 2500, 90, 150], SISTEMA: [3000, 5000, 150, 300] },
+  US: { LP: [500, 900, 49, 79], SITE: [900, 1800, 79, 149], SISTEMA: [1800, 3500, 149, 249] },
 }
 
 export const CURRENCY: Record<Market, string> = { BR: 'BRL', PT: 'EUR', US: 'USD' }
@@ -243,6 +245,26 @@ export const NICHES: Niche[] = [
     seo: ['construção de piscina', 'piscina de fibra', 'manutenção de piscina'],
   },
   {
+    id: 'limpeza_br', label: 'Limpeza (brasileiros nos EUA)', emoji: '🧽', tier: 'A', minReviews: 15, brazilianUS: true,
+    queries: { 'pt-BR': ['empresa de limpeza residencial'], 'pt-PT': ['limpezas domésticas'], en: ['brazilian cleaning services', 'brazilian house cleaning'] },
+    package: 'SITE', system: 'Site em inglês com orçamento online por tamanho da casa + agenda de limpezas recorrentes',
+    why: 'Cliente de limpeza é recorrente (semanal ou quinzenal) e paga em dólar o ano todo. Um cliente fixo novo paga meses do serviço. O dono fala português, mas o cliente dele é americano e pesquisa no Google em inglês.',
+    pains: ['Marketing só em português e no Instagram, mas o cliente é americano', 'Paga caro por lead no Angi/Thumbtack (de US$ 15 a 85 cada, dividido com outros)', 'Sem orçamento online: o americano quer o preço antes de ligar'],
+    deliverables: ['Site em inglês, com fotos reais e avaliações do Google', 'Orçamento online por quartos e banheiros', 'Página de planos recorrentes (weekly, biweekly)', 'Ficha do Google otimizada em inglês'],
+    hook: 'o americano que pesquisa "house cleaning near me", vê a nota alta de vocês, mas não acha um site em inglês para pedir orçamento',
+    seo: ['house cleaning', 'deep cleaning', 'move out cleaning'],
+  },
+  {
+    id: 'obras_br', label: 'Reforma e pintura (brasileiros nos EUA)', emoji: '🛠️', tier: 'A', minReviews: 10, brazilianUS: true,
+    queries: { 'pt-BR': ['reforma residencial'], 'pt-PT': ['remodelações'], en: ['brazilian contractor', 'brazilian painting company', 'brazilian flooring'] },
+    package: 'SITE', system: 'Site em inglês com portfólio de obras + orçamento com fotos',
+    why: 'Obra de pintura, piso ou reforma vale milhares de dólares. O dono costuma depender de indicação e de plataformas que cobram caro por lead. Um site com portfólio em inglês fecha obra direto.',
+    pains: ['Fotos das obras só no celular e no Instagram', 'Depende de indicação ou de lead pago e dividido com concorrentes', 'Site em português ou nenhum, mas o cliente é americano'],
+    deliverables: ['Portfólio de obras com antes e depois', 'Orçamento com envio de fotos e medidas', 'Avaliações do Google em destaque', 'SEO em inglês por cidade atendida'],
+    hook: 'o americano que vai reformar, pesquisa no Google e pede orçamento para quem mostra mais obras prontas',
+    seo: ['painting contractor', 'flooring installation', 'home remodeling'],
+  },
+  {
     id: 'beleza', label: 'Salão de beleza / barbearia', emoji: '💈', tier: 'C',
     queries: { 'pt-BR': ['salão de beleza', 'barbearia'], 'pt-PT': ['cabeleireiro', 'barbearia'], en: ['hair salon', 'barbershop'] },
     package: 'LP', system: 'Agendamento online próprio (sem taxa de app)',
@@ -287,9 +309,9 @@ export const NICHES: Niche[] = [
 export const NICHE_BY_ID = Object.fromEntries(NICHES.map((n) => [n.id, n])) as Record<string, Niche>
 
 /** Nichos ordenados pelo potencial (para o modo "Minerar os melhores"). */
-export function bestNiches(lagos = false): Niche[] {
+export function bestNiches(lagos = false, market: Market = 'BR'): Niche[] {
   const tierScore = { A: 3, B: 2, C: 1 }
-  return [...NICHES].filter((n) => n.tier === 'A').sort((a, b) => {
+  return [...NICHES].filter((n) => n.tier === 'A' && (market === 'US' ? !!n.brazilianUS : !n.brazilianUS)).sort((a, b) => {
     const sa = tierScore[a.tier] * 10 + (a.package === 'SISTEMA' ? 4 : a.package === 'SITE' ? 2 : 0) + (lagos && a.lagos ? 6 : 0)
     const sb = tierScore[b.tier] * 10 + (b.package === 'SISTEMA' ? 4 : b.package === 'SITE' ? 2 : 0) + (lagos && b.lagos ? 6 : 0)
     return sb - sa
@@ -300,6 +322,8 @@ export function bestNiches(lagos = false): Niche[] {
 export function guessNiche(types: string[], name: string): string | undefined {
   const t = new Set(types)
   const n = name.toLowerCase()
+  if (/brazil|brasil/.test(n) && /clean|limpeza|maid|housekeep/.test(n)) return 'limpeza_br'
+  if (/brazil|brasil/.test(n) && /paint|floor|construct|remodel|contract|carpent/.test(n)) return 'obras_br'
   if (/piscina/.test(n)) return 'piscina'
   if (/repouso|idoso|geri[aá]tr|s[eê]nior|longa perman/.test(n)) return 'senior'
   if (/planejad|marcenar/.test(n) || t.has('furniture_store')) return 'arquitetura'

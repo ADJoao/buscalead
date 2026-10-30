@@ -63,8 +63,8 @@ export function Prospect() {
 
   // modo "minerar": escolhe sozinho os nichos de maior potencial
   useEffect(() => {
-    if (mode === 'mine') setNicheIds(bestNiches(lagos).slice(0, 7).map((n) => n.id))
-  }, [mode, lagos])
+    if (mode === 'mine') setNicheIds(bestNiches(lagos, market).slice(0, 7).map((n) => n.id))
+  }, [mode, lagos, market])
 
   useEffect(() => {
     setCityIds((ids) => {

@@ -53,6 +53,18 @@ function benefit(lead: Lead, en = false): string {
 export function whatsappMessage(lead: Lead): string {
   if (lead.customMessage) return lead.customMessage
   if (lead.ai?.analysis.mensagem_whatsapp) return lead.ai.analysis.mensagem_whatsapp
+  const nicheInfo = lead.nicheId ? NICHE_BY_ID[lead.nicheId] : undefined
+  if (lead.market === 'US' && nicheInfo?.brazilianUS) {
+    const r = lead.rating ?? 0
+    return [
+      `Oi, tudo bem? Falo com o responsável pela ${lead.name}?`,
+      r >= 4.5
+        ? `Vi que vocês têm nota ${r.toFixed(1).replace('.', ',')} no Google com ${lead.reviews} avaliações. É coisa de quem trabalha bem.`
+        : `Vi que vocês já têm ${lead.reviews} avaliações no Google.`,
+      `Só que o americano que pesquisa "${nicheInfo.seo[0]}" na região e quer pedir orçamento não encontra ${lead.siteStatus === 'none' || lead.siteStatus === 'social' ? 'um site em inglês de vocês' : 'um site que passe a mesma confiança das avaliações'}, e acaba chamando outra empresa.`,
+      `Montei uma prévia de como ficaria a página de vocês em inglês, com orçamento online. Posso te mandar a imagem aqui?`,
+    ].join('\n\n')
+  }
   if (lead.market === 'US') {
     return [
       `Hi! Is this the owner of ${lead.name}?`,

@@ -5,7 +5,7 @@ import { NICHES, PACKAGES, PRICE_TABLE, bestNiches } from '../lib/niches'
 
 export function Niches() {
   const [lagos, setLagos] = useState(true)
-  const ranked = bestNiches(lagos)
+  const ranked = [...bestNiches(lagos, 'BR'), ...bestNiches(false, 'US')]
   return (
     <>
       <div className="page-head">
@@ -19,7 +19,8 @@ export function Niches() {
 
       <div className="grid g-2">
         {ranked.map((n, i) => {
-          const [a, b, c, d] = PRICE_TABLE.BR[n.package]
+          const [a, b, c, d] = PRICE_TABLE[n.brazilianUS ? 'US' : 'BR'][n.package]
+          const cur = n.brazilianUS ? 'USD' : 'BRL'
           return (
             <div key={n.id} className={`glass pad ${i < 3 ? 'glow' : ''}`}>
               <div className="row spread" style={{ alignItems: 'flex-start' }}>
@@ -36,8 +37,8 @@ export function Niches() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className="mono" style={{ fontWeight: 650 }}>{money(a)}–{money(b)}</div>
-                  <div className="mono accent" style={{ fontSize: 12.5 }}>+{money(c)}–{money(d)}/mês</div>
+                  <div className="mono" style={{ fontWeight: 650 }}>{money(a, cur)}–{money(b, cur)}</div>
+                  <div className="mono accent" style={{ fontSize: 12.5 }}>+{money(c, cur)}–{money(d, cur)}/mês</div>
                 </div>
               </div>
               <p className="muted" style={{ fontSize: 13.5, margin: '14px 0 10px' }}>{n.why}</p>
