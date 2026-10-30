@@ -4,6 +4,8 @@ name = "buscalead"
 main = "worker/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
+# Mantém as variáveis criadas no painel da Cloudflare quando o deploy roda.
+keep_vars = true
 
 [assets]
 directory = "./dist"
