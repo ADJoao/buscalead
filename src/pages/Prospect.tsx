@@ -1,6 +1,7 @@
-import { ArrowUp, ChevronDown, Crosshair, Filter, Loader2, Pickaxe, Radar, Save, Square, Star, Trophy, X } from 'lucide-react'
+import { ArrowUp, ChevronDown, ClipboardCopy, Crosshair, Filter, Loader2, Pickaxe, Radar, Save, Square, Star, Trophy, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { LeadListHead, LeadRow } from '../components/LeadRow'
+import { claudeBatchPrompt } from '../lib/messages'
 import { Empty, ScoreRing, SectionHead, SiteChip, Stars, Switch } from '../components/ui'
 import { placesUsage, serverStatus } from '../lib/api'
 import { money, num } from '../lib/format'
@@ -292,6 +293,21 @@ export function Prospect() {
               {selected.size > 0 && (
                 <button className="btn sm" onClick={() => saveList(leads.filter((l) => selected.has(l.id)))}><Save size={14} /> Salvar selecionados ({selected.size})</button>
               )}
+              <button
+                className="btn sm"
+                title="Copia um pedido completo para colar no chat do Claude, que pesquisa na internet. Sem custo de API."
+                onClick={async () => {
+                  const pick = selected.size ? leads.filter((l) => selected.has(l.id)) : podium
+                  try {
+                    await navigator.clipboard.writeText(claudeBatchPrompt(pick.slice(0, 10)))
+                    toast(`Pedido com ${Math.min(pick.length, 10)} lead(s) copiado: cole no chat do Claude`)
+                  } catch {
+                    toast('Não consegui copiar.', true)
+                  }
+                }}
+              >
+                <ClipboardCopy size={14} /> {selected.size ? `Copiar ${Math.min(selected.size, 10)} para o Claude` : 'Copiar Top 5 para o Claude'}
+              </button>
               <button className="btn primary sm" onClick={() => saveList(leads.filter((l) => l.tier === 'top'))}><ArrowUp size={14} /> Salvar todos os TOP</button>
               <button className="btn ghost sm" onClick={() => { setResult(null); sessionStorage.removeItem(SS_KEY) }}><X size={14} /> Limpar</button>
             </div>

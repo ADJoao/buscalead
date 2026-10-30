@@ -380,7 +380,7 @@ function AiTab({ lead }: { lead: Lead }) {
         </div>
         <div className="block mt">
           <h4><ClipboardCopy size={15} /> Alternativa grátis</h4>
-          <p className="muted" style={{ fontSize: 13.5, margin: '0 0 10px' }}>Copia todos os dados do lead num prompt pronto. Cole no chat do Claude (já incluso na sua assinatura).</p>
+          <p className="muted" style={{ fontSize: 13.5, margin: '0 0 10px' }}>Copia um pedido completo: o Claude do seu chat pesquisa a fundo na internet (avaliações, Instagram, concorrentes, dono) e devolve plano, pacote e mensagem. Sem custo de API.</p>
           <button className="btn sm" onClick={() => copy(claudePrompt(lead), toast, 'Prompt copiado: cole no chat do Claude')}><ClipboardCopy size={14} /> Copiar para o Claude</button>
         </div>
       </>

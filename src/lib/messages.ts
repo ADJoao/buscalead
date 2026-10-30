@@ -108,23 +108,40 @@ export function visitScript(lead: Lead, ownerName: string): string[] {
   ]
 }
 
-/** Prompt pronto pra colar no chat do Claude (sem custo de API). */
+/** Pedido de um lead só, para colar no chat do Claude (sem custo de API). */
 export function claudePrompt(lead: Lead): string {
-  const n = lead.nicheId ? NICHE_BY_ID[lead.nicheId] : undefined
-  return `Analise este lead para a minha agência (sites, SEO local e sistemas de agendamento/reserva/CRM). Pesquise o Instagram e os seguidores dele e procure e-mail público.
+  return claudeBatchPrompt([lead])
+}
 
-Me entregue: resumo, pontos fortes, pontos fracos, dores dos clientes dele, oportunidades, pacote recomendado com setup e mensalidade (minha tabela: LP R$600–900 + R$120–150/mês; site + SEO R$1.200–2.000 + R$150–200/mês; site + sistema R$2.500–3.500+ + R$250–350/mês), entregáveis, por que vale a mensalidade, objeções com respostas, mensagem de WhatsApp (sem dizer que sou criador de sites: elogio específico, ferida, ofereço mostrar uma prévia, pergunta de baixo atrito), follow-up, e-mail, roteiro de visita presencial e ideia do hero (headline, subheadline, CTA, visual).
+/** Vários leads num só pedido para colar no chat do Claude (que pesquisa na internet, sem custo de API). */
+export function claudeBatchPrompt(leads: Lead[]): string {
+  const list = leads
+    .map((l, i) => {
+      const n = l.nicheId ? NICHE_BY_ID[l.nicheId] : undefined
+      return `${i + 1}. ${l.name} | ${l.nicheLabel}${n ? ` (sistema sugerido: ${n.system})` : ''}
+   Cidade: ${l.city ?? '-'}${l.neighborhood ? ` (${l.neighborhood})` : ''} | Endereço: ${l.address ?? '-'}
+   Google: ${l.rating ?? '-'}★ com ${l.reviews} avaliações | Maps: ${l.mapsUrl ?? '-'}
+   Telefone: ${l.phoneIntl ?? l.phone ?? '-'} | Site: ${l.website ?? 'NÃO TEM'} (${l.siteStatus}) | Instagram: ${l.instagram ?? '-'}
+   Já detectado: ${l.weaknesses.slice(0, 4).join('; ') || '-'}`
+    })
+    .join('\n\n')
+  return `Você é meu estrategista comercial. Eu tenho uma agência pequena (sites, SEO local e sistemas de agendamento/reserva/CRM) e vou prospectar os negócios abaixo, online e presencialmente.
 
-DADOS
-Negócio: ${lead.name}
-Nicho: ${lead.nicheLabel}${n ? ` (ticket ${n.tier}, sistema sugerido: ${n.system})` : ''}
-Cidade: ${lead.city ?? '-'} · ${lead.address ?? ''}
-Google: ${lead.rating ?? '-'}★ com ${lead.reviews} avaliações · ${lead.mapsUrl ?? ''}
-Telefone: ${lead.phoneIntl ?? lead.phone ?? '-'}
-Site: ${lead.website ?? 'NÃO TEM'} (situação: ${lead.siteStatus})
-Problemas do site: ${lead.site?.issues.join('; ') || '-'}
-Sistemas detectados: ${lead.site?.systems.map((s) => s.name).join(', ') || 'nenhum'}
-Instagram: ${lead.instagram ?? '-'} · E-mail: ${lead.email ?? '-'}
-Pontos fracos detectados: ${lead.weaknesses.join('; ') || '-'}
-Pontuação no meu CRM: ${lead.score}/100`
+Para CADA negócio, PESQUISE NA INTERNET de verdade (não responda só com base nos dados abaixo):
+1. Leia as avaliações do Google e do Instagram: o que os clientes elogiam, o que reclamam (demora, dificuldade de marcar, preço, atendimento), com exemplos curtos.
+2. Ache o Instagram, estime os seguidores, veja o tipo de conteúdo, a frequência e se tem link na bio, WhatsApp ou agendamento.
+3. Veja quem são os 2 ou 3 concorrentes mais fortes na mesma cidade e o que eles têm que este negócio não tem (site, agendamento, avaliações, anúncios).
+4. Procure o nome do dono ou responsável, notícias, inauguração recente, expansão, vagas, promoções ou anúncios pagos.
+5. Descubra que sistemas ele já usa (agenda, reserva, delivery, CRM, plataformas) e quanto ele paga de comissão ou perde sem isso.
+
+Depois me entregue, por negócio:
+- Os 3 pontos fracos MAIS GRAVES e específicos dele (nada genérico como "não tem site"), cada um com o prejuízo concreto em dinheiro ou clientes.
+- O que eu venderia (landing page, site + SEO ou site + sistema), com setup e mensalidade. Minha tabela: LP R$600–900 + R$120–150/mês; site + SEO R$1.200–2.000 + R$150–200/mês; site + sistema R$2.500–3.500+ + R$250–350/mês. Justifique a mensalidade com o que ela entrega todo mês.
+- Mensagem de WhatsApp para a primeira abordagem: NUNCA dizer que sou criador de sites. Elogio verdadeiro e específico, a ferida dele (algo concreto que achei na pesquisa), oferta de mostrar uma prévia pronta, e uma pergunta de baixo atrito. 3 a 5 linhas, sem preço, sem link.
+- Principal objeção provável e a resposta.
+- Ideia do hero da prévia (headline, subheadline, CTA e visual).
+No fim, ranqueie os negócios do que mais vale abordar primeiro ao menos, com uma linha explicando o motivo.
+
+NEGÓCIOS
+${list}`
 }
