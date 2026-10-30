@@ -11,8 +11,8 @@ export function Niches() {
       <div className="page-head">
         <div>
           <div className="eyebrow"><Gem size={13} /> Inteligência comercial</div>
-          <h1 className="page-title">Melhores nichos</h1>
-          <p className="page-sub">Onde está o dinheiro, o que vender e como abordar. Ranqueado por ticket e chance de fechar.</p>
+          <h1 className="page-title">Nichos TOP</h1>
+          <p className="page-sub">Os 6 nichos escolhidos pela pesquisa: precisam de verdade, cada cliente vale muito e não existe plataforma gigante resolvendo.</p>
         </div>
         <button className={`chip ${lagos ? 'on' : ''}`} onClick={() => setLagos((v) => !v)}><Waves size={14} /> Peso Região dos Lagos</button>
       </div>
@@ -29,7 +29,7 @@ export function Niches() {
                   <div>
                     <div style={{ fontWeight: 650, fontSize: 15.5 }}>{n.label}</div>
                     <div className="row wrap" style={{ gap: 6, marginTop: 4 }}>
-                      <span className={`tag ${n.tier === 'A' ? 'lime' : n.tier === 'B' ? 'blue' : ''}`}>Ticket {n.tier}</span>
+                      <span className="tier-top">TOP</span>
                       <span className="tag">{PACKAGES[n.package].short}</span>
                       {n.lagos && <span className="tag green"><Waves size={11} /> Lagos</span>}
                     </div>

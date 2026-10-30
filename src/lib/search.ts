@@ -139,7 +139,7 @@ export async function runSearch(
   const candidates: { place: PlaceResult; nicheId: string; city: string; siteStatus: SiteStatus }[] = []
   for (const f of found.values()) {
     const siteStatus = initialSiteStatus(f.place)
-    const reason = exclusionReason(f.place, siteStatus === 'pending' ? 'unknown' : siteStatus, params.rules)
+    const reason = exclusionReason(f.place, siteStatus === 'pending' ? 'unknown' : siteStatus, params.rules, f.nicheId)
     if (reason) removed.push({ name: f.place.name, reason, rating: f.place.rating, reviews: f.place.reviews })
     else candidates.push({ ...f, siteStatus })
   }
@@ -169,7 +169,7 @@ export async function runSearch(
   for (const c of candidates) {
     const site = c.place.website && c.siteStatus === 'pending' ? audits[c.place.website] ?? null : null
     const siteStatus: SiteStatus = c.siteStatus === 'pending' ? site?.status ?? 'unknown' : c.siteStatus
-    const reason = exclusionReason(c.place, siteStatus, params.rules)
+    const reason = exclusionReason(c.place, siteStatus, params.rules, c.nicheId)
     if (reason) { removed.push({ name: c.place.name, reason, rating: c.place.rating, reviews: c.place.reviews }); continue }
 
     const nicheId = guessNiche(c.place.types, c.place.name) ?? c.nicheId

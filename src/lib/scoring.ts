@@ -44,10 +44,11 @@ export function siteLabel(s: SiteStatus): string {
 }
 
 /** Motivo para tirar o lead da lista (ou null se ele passa). */
-export function exclusionReason(p: PlaceResult, siteStatus: SiteStatus, rules: FilterRules): string | null {
+export function exclusionReason(p: PlaceResult, siteStatus: SiteStatus, rules: FilterRules, nicheId?: string): string | null {
+  const min = Math.min(rules.minReviews, (nicheId && NICHE_BY_ID[nicheId]?.minReviews) || rules.minReviews)
   if (p.businessStatus && p.businessStatus !== 'OPERATIONAL') return 'Fechado'
   if (CHAINS.test(p.name)) return 'Franquia / rede grande'
-  if (p.reviews < rules.minReviews) return `Menos de ${rules.minReviews} avaliações`
+  if (p.reviews < min) return `Menos de ${min} avaliações`
   if ((p.rating ?? 0) < rules.minRating) return `Nota abaixo de ${rules.minRating.toFixed(1)}`
   if (siteStatus === 'good') return 'Já tem site bom'
   if (siteStatus === 'weak' && !rules.includeWeakSites) return 'Site mediano'

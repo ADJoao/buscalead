@@ -26,6 +26,8 @@ export interface Niche {
   lagos?: boolean
   /** cuidado com conselho profissional */
   compliance?: string
+  /** mínimo de avaliações no Google (negócios de poucos clientes e ticket alto têm menos avaliações) */
+  minReviews?: number
 }
 
 export const PACKAGES: Record<PackageId, { label: string; short: string }> = {
@@ -47,7 +49,7 @@ export const NICHES: Niche[] = [
   {
     id: 'dentista', label: 'Clínica odontológica', emoji: '🦷', tier: 'A',
     queries: { 'pt-BR': ['clínica odontológica', 'dentista'], 'pt-PT': ['clínica dentária'], en: ['dentist', 'dental clinic'] },
-    package: 'SISTEMA', system: 'Agendamento online + página por tratamento + lembrete automático no WhatsApp',
+    package: 'SISTEMA', system: 'Página por tratamento + agendamento de avaliação + CRM de orçamentos (follow-up de quem não fechou o tratamento)',
     why: 'Tratamentos de R$ 2 mil a R$ 30 mil (implante, lente, invisalign). Um paciente novo paga o site inteiro.',
     pains: ['Paciente pesquisa "implante dentário em [cidade]" e cai no concorrente', 'Secretária perde tempo respondendo preço e horário', 'Faltas e horários vagos na agenda'],
     deliverables: ['Página para cada tratamento (implante, lente, clareamento, ortodontia)', 'Agendamento online integrado ao WhatsApp', 'Galeria de casos dentro das regras do CFO', 'SEO local por tratamento + Google Meu Negócio'],
@@ -66,7 +68,7 @@ export const NICHES: Niche[] = [
     seo: ['harmonização facial', 'botox', 'limpeza de pele', 'depilação a laser'],
   },
   {
-    id: 'pousada', label: 'Pousada / hotel', emoji: '🏝️', tier: 'B', lagos: true,
+    id: 'pousada', label: 'Pousada / hotel', emoji: '🏝️', tier: 'C', lagos: true,
     queries: { 'pt-BR': ['pousada', 'hotel'], 'pt-PT': ['alojamento local', 'guest house'], en: ['boutique hotel', 'bed and breakfast'] },
     // Pesquisa (out/2026): já existem sistemas baratos e famosos para pousada (Hospedin, Omnibees, Silbeck),
     // então o produto certo é o site oficial ligado ao motor de reservas que ela já usa, e não um sistema próprio.
@@ -78,7 +80,7 @@ export const NICHES: Niche[] = [
     seo: ['pousada em Cabo Frio', 'pousada pé na areia', 'pousada barata'],
   },
   {
-    id: 'passeio', label: 'Passeio de barco / turismo', emoji: '⛵', tier: 'B', lagos: true,
+    id: 'passeio', label: 'Passeio de barco / turismo', emoji: '⛵', tier: 'C', lagos: true,
     queries: { 'pt-BR': ['passeio de barco', 'agência de turismo receptivo'], 'pt-PT': ['passeio de barco', 'tours'], en: ['boat tour', 'tour operator'] },
     package: 'SISTEMA', system: 'Reserva online com pagamento antecipado + site em 3 idiomas',
     why: 'Turista decide no celular, na véspera. Quem aparece primeiro com reserva fácil leva.',
@@ -98,7 +100,7 @@ export const NICHES: Niche[] = [
     seo: ['casa para alugar temporada', 'apartamento à venda', 'imobiliária em Cabo Frio'],
   },
   {
-    id: 'advocacia', label: 'Escritório de advocacia', emoji: '⚖️', tier: 'A',
+    id: 'advocacia', label: 'Escritório de advocacia', emoji: '⚖️', tier: 'C',
     queries: { 'pt-BR': ['escritório de advocacia', 'advogado'], 'pt-PT': ['escritório de advogados'], en: ['law firm', 'attorney'] },
     package: 'SITE', system: 'Site por área de atuação + conteúdo informativo para SEO + triagem de casos',
     why: 'Honorários altos. Um caso novo paga o projeto todo.',
@@ -109,7 +111,7 @@ export const NICHES: Niche[] = [
     compliance: 'OAB (Provimento 205/2021): sem mercantilização, sem promessa de resultado, foco informativo',
   },
   {
-    id: 'clinica', label: 'Clínica médica / fisioterapia', emoji: '🩺', tier: 'A',
+    id: 'clinica', label: 'Clínica médica / fisioterapia', emoji: '🩺', tier: 'C',
     queries: { 'pt-BR': ['clínica de fisioterapia', 'clínica médica'], 'pt-PT': ['clínica de fisioterapia', 'clínica médica'], en: ['physical therapy clinic', 'medical clinic'] },
     package: 'SISTEMA', system: 'Agendamento online + página por especialidade + lembretes',
     why: 'Pacientes recorrentes (sessões semanais). Agenda cheia = receita previsível.',
@@ -120,7 +122,7 @@ export const NICHES: Niche[] = [
     compliance: 'CFM/COFFITO: sem antes e depois e sem promessa de cura',
   },
   {
-    id: 'solar', label: 'Energia solar', emoji: '☀️', tier: 'B',
+    id: 'solar', label: 'Energia solar', emoji: '☀️', tier: 'C',
     queries: { 'pt-BR': ['energia solar', 'instalação de painel solar'], 'pt-PT': ['painéis solares', 'energia solar'], en: ['solar installer'] },
     package: 'SISTEMA', system: 'Simulador de economia na conta de luz + captação de leads + CRM',
     why: 'Ticket de R$ 15–40 mil por instalação. Um único lead fechado paga o sistema por anos.',
@@ -130,9 +132,9 @@ export const NICHES: Niche[] = [
     seo: ['energia solar residencial', 'placa solar preço', 'energia solar financiamento'],
   },
   {
-    id: 'arquitetura', label: 'Arquitetura / planejados', emoji: '📐', tier: 'A',
-    queries: { 'pt-BR': ['móveis planejados', 'escritório de arquitetura'], 'pt-PT': ['gabinete de arquitetura', 'móveis por medida'], en: ['architect', 'custom cabinets'] },
-    package: 'SITE', system: 'Portfólio + orçamento guiado + CRM de projetos',
+    id: 'arquitetura', label: 'Móveis planejados / marcenaria', emoji: '📐', tier: 'A', minReviews: 10,
+    queries: { 'pt-BR': ['móveis planejados', 'marcenaria sob medida'], 'pt-PT': ['gabinete de arquitetura', 'móveis por medida'], en: ['architect', 'custom cabinets'] },
+    package: 'SITE', system: 'Portfólio por ambiente + orçamento guiado + CRM de orçamentos (follow-up de quem pediu e não fechou)',
     why: 'Projetos de R$ 10–80 mil. O portfólio é o que vende.',
     pains: ['Portfólio espalhado no Instagram', 'Orçamentos de curiosos tomando tempo', 'Clientes de alto padrão esperam um site profissional'],
     deliverables: ['Portfólio por ambiente', 'Orçamento guiado (qualifica o cliente)', 'Depoimentos', 'SEO "móveis planejados em [cidade]"'],
@@ -140,7 +142,7 @@ export const NICHES: Niche[] = [
     seo: ['móveis planejados', 'cozinha planejada', 'arquiteto'],
   },
   {
-    id: 'eventos', label: 'Buffet / casa de festas', emoji: '🎉', tier: 'B',
+    id: 'eventos', label: 'Buffet / casa de festas', emoji: '🎉', tier: 'C',
     queries: { 'pt-BR': ['buffet', 'casa de festas', 'espaço para eventos'], 'pt-PT': ['quinta para eventos', 'catering'], en: ['event venue', 'catering'] },
     package: 'SISTEMA', system: 'Agenda de datas disponíveis + orçamento online + CRM de festas',
     why: 'Eventos de R$ 5–50 mil. Quem responde orçamento primeiro fecha.',
@@ -150,14 +152,14 @@ export const NICHES: Niche[] = [
     seo: ['buffet de casamento', 'espaço para festas', 'buffet infantil'],
   },
   {
-    id: 'escola', label: 'Curso / escola de idiomas', emoji: '🎓', tier: 'B',
-    queries: { 'pt-BR': ['escola de inglês', 'curso profissionalizante'], 'pt-PT': ['escola de línguas', 'centro de explicações'], en: ['language school', 'tutoring center'] },
-    package: 'SITE', system: 'Página de matrícula + aula experimental + CRM de alunos',
-    why: 'Mensalidade recorrente do aluno. Cada matrícula vale meses de receita.',
-    pains: ['Concorrência das franquias', 'Interessado que pede info e some', 'Matrícula ainda no papel'],
-    deliverables: ['Página de cada curso', 'Agendamento de aula experimental', 'Matrícula online', 'SEO local'],
-    hook: 'os pais que pesquisam "curso de inglês perto de mim" e acabam na franquia',
-    seo: ['curso de inglês', 'autoescola', 'reforço escolar'],
+    id: 'escola', label: 'Escola particular', emoji: '🎓', tier: 'A', minReviews: 15,
+    queries: { 'pt-BR': ['escola particular', 'educação infantil', 'escola bilíngue'], 'pt-PT': ['colégio privado', 'creche'], en: ['private school', 'preschool'] },
+    package: 'SISTEMA', system: 'Site de captação de matrículas + agendamento de visita + CRM de famílias interessadas',
+    why: 'Cada aluno novo paga mensalidade o ano inteiro, por vários anos. Um único aluno a mais paga o site e a mensalidade com sobra. Os pais pesquisam a escola no Google antes de visitar.',
+    pains: ['Família pesquisa "escola particular em [cidade]" e só acha as grandes redes', 'Pai pede informação no WhatsApp, recebe a tabela e some (não há follow-up)', 'Época de matrícula (ago a jan) sem campanha organizada'],
+    deliverables: ['Site com proposta pedagógica, estrutura, fotos reais e depoimentos de pais', 'Agendamento de visita online', 'CRM simples das famílias interessadas, com lembrete de retorno', 'SEO local por bairro e campanha de matrícula'],
+    hook: 'os pais que pesquisam "escola particular em [cidade]" na época de matrícula e marcam visita nas 2 ou 3 primeiras que aparecem',
+    seo: ['escola particular', 'educação infantil', 'escola bilíngue', 'creche particular'],
   },
   {
     id: 'restaurante', label: 'Restaurante', emoji: '🍽️', tier: 'C', lagos: true,
@@ -180,7 +182,7 @@ export const NICHES: Niche[] = [
     seo: ['pilates', 'academia perto de mim', 'personal trainer'],
   },
   {
-    id: 'pet', label: 'Pet shop / veterinária', emoji: '🐾', tier: 'B',
+    id: 'pet', label: 'Pet shop / veterinária', emoji: '🐾', tier: 'C',
     queries: { 'pt-BR': ['clínica veterinária', 'pet shop banho e tosa'], 'pt-PT': ['clínica veterinária'], en: ['veterinary clinic', 'pet grooming'] },
     package: 'SISTEMA', system: 'Agendamento de banho e tosa/consulta + lembrete de vacina',
     why: 'Serviço recorrente (banho quinzenal, vacinas). O tutor é fiel.',
@@ -190,7 +192,7 @@ export const NICHES: Niche[] = [
     seo: ['veterinário 24h', 'banho e tosa', 'pet shop'],
   },
   {
-    id: 'automotivo', label: 'Oficina / estética automotiva', emoji: '🚗', tier: 'B',
+    id: 'automotivo', label: 'Oficina / estética automotiva', emoji: '🚗', tier: 'C',
     queries: { 'pt-BR': ['oficina mecânica', 'estética automotiva', 'auto center'], 'pt-PT': ['oficina automóvel'], en: ['auto repair shop', 'car detailing'] },
     package: 'SITE', system: 'Orçamento online com foto + agendamento de serviço',
     why: 'Serviços de R$ 500 a R$ 5 mil, cliente que volta.',
@@ -200,7 +202,7 @@ export const NICHES: Niche[] = [
     seo: ['oficina mecânica', 'polimento', 'troca de óleo'],
   },
   {
-    id: 'servicos', label: 'Ar-condicionado / piscina / dedetização', emoji: '🛠️', tier: 'B', lagos: true,
+    id: 'servicos', label: 'Ar-condicionado / piscina / dedetização', emoji: '🛠️', tier: 'C', lagos: true,
     queries: { 'pt-BR': ['instalação de ar condicionado', 'manutenção de piscina', 'dedetizadora'], 'pt-PT': ['ar condicionado instalação', 'manutenção de piscinas'], en: ['hvac contractor', 'pool service'] },
     package: 'LP', system: 'Orçamento rápido + contratos de manutenção recorrente',
     why: 'Na praia, todo mundo precisa no verão. Contrato de manutenção é recorrência.',
@@ -210,7 +212,7 @@ export const NICHES: Niche[] = [
     seo: ['instalação de ar condicionado', 'limpeza de piscina', 'dedetização'],
   },
   {
-    id: 'urgencia', label: 'Desentupidora / chaveiro / guincho', emoji: '🚨', tier: 'B',
+    id: 'urgencia', label: 'Desentupidora / chaveiro / guincho', emoji: '🚨', tier: 'C',
     queries: { 'pt-BR': ['desentupidora', 'chaveiro 24 horas', 'guincho'], 'pt-PT': ['desentupimentos', 'serralheiro 24 horas', 'reboque'], en: ['plumber emergency', 'locksmith 24 hour', 'towing service'] },
     package: 'SITE', system: 'Site de SEO local por bairro + botão de ligar/WhatsApp (tira a dependência do Google Ads)',
     why: 'Busca de urgência: quem aparece primeiro no Google leva. Chamado de R$ 120 a R$ 800, e contratos mensais com condomínios e restaurantes (caixa de gordura). O setor tem muita reclamação de preço abusivo, então empresa honesta com site e orçamento fechado ganha confiança. Em cidade pequena, o volume de busca é menor: teste antes.',
@@ -218,6 +220,27 @@ export const NICHES: Niche[] = [
     deliverables: ['Página por serviço e por bairro atendido', 'Botão de ligar e de WhatsApp fixo no celular', 'Avaliações do Google em destaque', 'Ficha do Google otimizada'],
     hook: 'quem está com o problema agora, pesquisa no Google e liga para o primeiro número que aparece',
     seo: ['desentupidora 24 horas', 'chaveiro perto de mim', 'guincho 24h'],
+  },
+  {
+    id: 'senior', label: 'Residencial sênior / casa de repouso', emoji: '🏡', tier: 'A', minReviews: 10,
+    queries: { 'pt-BR': ['casa de repouso', 'residencial para idosos', 'clínica geriátrica'], 'pt-PT': ['lar de idosos', 'residência sénior'], en: ['assisted living', 'senior living'] },
+    package: 'SITE', system: 'Site de confiança (estrutura, equipe, rotina, licenças) + agendamento de visita + CRM de famílias',
+    why: 'Mensalidade de R$ 3.500 a R$ 6.000 por residente (pode passar de R$ 10 mil). Um residente novo paga um ano inteiro do seu serviço. A família decide com medo e precisa confiar: o site mostra o que o Instagram não mostra.',
+    pains: ['Família pesquisa no Google com pressa e compara 3 ou 4 lugares', 'Sem site, o lar parece amador e não passa segurança', 'Visitas marcadas pelo WhatsApp sem controle, famílias interessadas esquecidas'],
+    deliverables: ['Site com estrutura, equipe, rotina, cardápio, licenças (ANVISA/Vigilância) e fotos reais', 'Agendamento de visita', 'Depoimentos de famílias', 'CRM das famílias interessadas com retorno programado'],
+    hook: 'a família que precisa decidir rápido, pesquisa no Google e escolhe o lugar que passa mais confiança',
+    seo: ['casa de repouso', 'residencial para idosos', 'cuidador de idosos 24h'],
+    compliance: 'RDC 502/2021 da ANVISA: só divulgar o que a casa realmente cumpre',
+  },
+  {
+    id: 'piscina', label: 'Construção e manutenção de piscinas', emoji: '🏊', tier: 'A', minReviews: 10, lagos: true,
+    queries: { 'pt-BR': ['construção de piscinas', 'piscinas de fibra', 'manutenção de piscinas'], 'pt-PT': ['construção de piscinas', 'manutenção de piscinas'], en: ['pool builder', 'pool service'] },
+    package: 'SITE', system: 'Site com portfólio de obras + orçamento online + contratos de manutenção mensal',
+    why: 'Piscina nova custa de R$ 20 mil a mais de R$ 80 mil. Manutenção mensal fica entre R$ 350 e R$ 600 por casa, recorrente. Região de casas de praia e veraneio: muita piscina para construir e manter.',
+    pains: ['Cliente pede 3 orçamentos e escolhe quem mostra mais obras prontas', 'Portfólio espalhado no Instagram e no celular do dono', 'Vive da obra do momento, sem carteira de contratos de manutenção'],
+    deliverables: ['Portfólio de obras com fotos e tipo de piscina', 'Orçamento online com medidas e fotos do terreno', 'Página de planos de manutenção mensal', 'SEO "piscina em [cidade]" para a Região dos Lagos'],
+    hook: 'quem vai construir piscina na casa de praia, pesquisa no Google e pede orçamento para quem mostra mais obras',
+    seo: ['construção de piscina', 'piscina de fibra', 'manutenção de piscina'],
   },
   {
     id: 'beleza', label: 'Salão de beleza / barbearia', emoji: '💈', tier: 'C',
@@ -250,7 +273,7 @@ export const NICHES: Niche[] = [
     seo: ['ótica', 'exame de vista', 'óculos de grau'],
   },
   {
-    id: 'construcao', label: 'Marmoraria / vidraçaria / serralheria', emoji: '🧱', tier: 'A',
+    id: 'construcao', label: 'Marmoraria / vidraçaria / serralheria', emoji: '🧱', tier: 'C',
     queries: { 'pt-BR': ['marmoraria', 'vidraçaria', 'serralheria'], 'pt-PT': ['marmorista', 'vidraceiro'], en: ['countertop fabricator', 'glass company'] },
     package: 'SITE', system: 'Portfólio de obras + orçamento com fotos e medidas',
     why: 'Serviços de R$ 2–20 mil. Cliente compara 3 orçamentos.',
@@ -266,7 +289,7 @@ export const NICHE_BY_ID = Object.fromEntries(NICHES.map((n) => [n.id, n])) as R
 /** Nichos ordenados pelo potencial (para o modo "Minerar os melhores"). */
 export function bestNiches(lagos = false): Niche[] {
   const tierScore = { A: 3, B: 2, C: 1 }
-  return [...NICHES].sort((a, b) => {
+  return [...NICHES].filter((n) => n.tier === 'A').sort((a, b) => {
     const sa = tierScore[a.tier] * 10 + (a.package === 'SISTEMA' ? 4 : a.package === 'SITE' ? 2 : 0) + (lagos && a.lagos ? 6 : 0)
     const sb = tierScore[b.tier] * 10 + (b.package === 'SISTEMA' ? 4 : b.package === 'SITE' ? 2 : 0) + (lagos && b.lagos ? 6 : 0)
     return sb - sa
@@ -277,6 +300,9 @@ export function bestNiches(lagos = false): Niche[] {
 export function guessNiche(types: string[], name: string): string | undefined {
   const t = new Set(types)
   const n = name.toLowerCase()
+  if (/piscina/.test(n)) return 'piscina'
+  if (/repouso|idoso|geri[aá]tr|s[eê]nior|longa perman/.test(n)) return 'senior'
+  if (/planejad|marcenar/.test(n) || t.has('furniture_store')) return 'arquitetura'
   if (t.has('dentist') || t.has('dental_clinic') || /odonto|dent/.test(n)) return 'dentista'
   if (t.has('lodging') || t.has('hotel') || t.has('inn') || t.has('bed_and_breakfast') || /pousada|hotel|hostel/.test(n)) return 'pousada'
   if (t.has('real_estate_agency') || /imobili|imóveis|imoveis/.test(n)) return 'imobiliaria'

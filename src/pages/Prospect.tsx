@@ -29,7 +29,7 @@ export function Prospect() {
   const [cityIds, setCityIds] = useState<string[]>(['cabo-frio'])
   const [customCity, setCustomCity] = useState('')
   const [areas, setAreas] = useState<Record<string, string[]>>({})
-  const [nicheIds, setNicheIds] = useState<string[]>(['dentista', 'pousada', 'estetica'])
+  const [nicheIds, setNicheIds] = useState<string[]>(['arquitetura'])
   const [target, setTarget] = useState(50)
   const [minReviews, setMinReviews] = useState(settings.minReviews)
   const [minRating, setMinRating] = useState(settings.minRating)
@@ -207,11 +207,11 @@ export function Prospect() {
         })}
 
         <div className="field mt">
-          <span>Nichos <span className="dim">(A = ticket alto)</span></span>
+          <span>Nichos <span className="dim">(TOP = os 6 recomendados pela pesquisa; os apagados ficam fora do foco)</span></span>
           <div className="chips">
-            {NICHES.map((n) => (
-              <button key={n.id} className={`chip ${nicheIds.includes(n.id) ? 'on' : ''}`} onClick={() => setNicheIds((l) => toggle(l, n.id))}>
-                <span>{n.emoji}</span>{n.label}<span className="mono dim" style={{ fontSize: 11 }}>{n.tier}</span>
+            {[...NICHES].sort((a, b) => (a.tier === 'A' ? 0 : 1) - (b.tier === 'A' ? 0 : 1)).map((n) => (
+              <button key={n.id} className={`chip ${nicheIds.includes(n.id) ? 'on' : ''}`} onClick={() => setNicheIds((l) => toggle(l, n.id))} style={n.tier === 'A' ? undefined : { opacity: 0.55 }}>
+                <span>{n.emoji}</span>{n.label}{n.tier === 'A' && <span className="mono accent" style={{ fontSize: 11, fontWeight: 700 }}>TOP</span>}
               </button>
             ))}
           </div>
