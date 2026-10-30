@@ -1,6 +1,7 @@
-import { ArrowUp, Download, Flame, Radar, Search, Trash2, Users } from 'lucide-react'
+import { ArrowUp, Download, Flame, Plus, Radar, Search, Trash2, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { LeadForm } from '../components/LeadForm'
 import { LeadListHead, LeadRow } from '../components/LeadRow'
 import { Empty, ScoreRing, SectionHead, StageTag } from '../components/ui'
 import { money } from '../lib/format'
@@ -29,6 +30,7 @@ export function Leads() {
   const [onlyTop, setOnlyTop] = useState(false)
   const [sort, setSort] = useState<Sort>('priority')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [form, setForm] = useState<null | 'fechado' | 'novo'>(null)
 
   const cities = useMemo(() => [...new Set(leads.map((l) => l.city).filter(Boolean) as string[])].sort(), [leads])
   const focus = useMemo(() => focusList(leads, 5), [leads])
@@ -60,7 +62,14 @@ export function Leads() {
     return (
       <>
         <div className="page-head"><div><h1 className="page-title">Leads</h1></div></div>
-        <div className="glass"><Empty icon={<Users size={34} />} title="Nenhum lead no CRM ainda">Faça uma busca e salve os melhores. <Link to="/prospectar" className="accent">Buscar leads →</Link></Empty></div>
+        <div className="glass"><Empty icon={<Users size={34} />} title="Nenhum lead no CRM ainda">
+          Faça uma busca e salve os melhores. <Link to="/prospectar" className="accent">Buscar leads →</Link>
+          <div className="row mt" style={{ justifyContent: 'center' }}>
+            <button className="btn primary sm" onClick={() => setForm('fechado')}><Plus size={14} /> Adicionar cliente</button>
+            <button className="btn sm" onClick={() => setForm('novo')}><Plus size={14} /> Adicionar lead</button>
+          </div>
+        </Empty></div>
+        {form && <LeadForm defaultStage={form} onClose={() => setForm(null)} />}
       </>
     )
   }
@@ -74,6 +83,8 @@ export function Leads() {
           <p className="page-sub">{leads.length} no CRM · {leads.filter((l) => l.tier === 'top').length} TOP · {counts.fechado ?? 0} clientes</p>
         </div>
         <div className="row">
+          <button className="btn sm" onClick={() => setForm('novo')}><Plus size={14} /> Lead</button>
+          <button className="btn sm" onClick={() => setForm('fechado')}><Plus size={14} /> Cliente</button>
           <button className="btn sm" onClick={exportCsv}><Download size={14} /> Exportar CSV</button>
           <Link to="/prospectar" className="btn primary sm"><Radar size={14} /> Buscar mais</Link>
         </div>
@@ -148,6 +159,7 @@ export function Leads() {
         ))}
         {!list.length && <div className="empty">Nada com esses filtros.</div>}
       </div>
+      {form && <LeadForm defaultStage={form} onClose={() => setForm(null)} />}
     </>
   )
 }

@@ -1,4 +1,6 @@
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
+import { LeadForm } from '../components/LeadForm'
 import { ScoreRing } from '../components/ui'
 import { money } from '../lib/format'
 import { useStore } from '../lib/store'
@@ -7,6 +9,7 @@ import { STAGES, type Stage } from '../lib/types'
 export function Pipeline() {
   const { leads, updateLead, openLead } = useStore()
   const [over, setOver] = useState<Stage | null>(null)
+  const [form, setForm] = useState(false)
 
   function drop(stage: Stage, id: string) {
     const l = leads.find((x) => x.id === id)
@@ -24,6 +27,7 @@ export function Pipeline() {
           <div className="eyebrow">Arraste os cards entre as etapas</div>
           <h1 className="page-title">Pipeline</h1>
         </div>
+        <button className="btn primary sm" onClick={() => setForm(true)}><Plus size={14} /> Adicionar cliente</button>
       </div>
       <div className="kanban">
         {STAGES.map((s) => {
@@ -70,6 +74,7 @@ export function Pipeline() {
           )
         })}
       </div>
+      {form && <LeadForm onClose={() => setForm(false)} />}
     </>
   )
 }

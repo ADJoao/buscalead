@@ -3,6 +3,7 @@ import {
   MessageCircle, Phone, Plus, Sparkles, Target, Trash2, TriangleAlert, X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { LeadForm } from './LeadForm'
 import { analyzeLead, localAiSpend } from '../lib/api'
 import { dateBR, money, relTime } from '../lib/format'
 import { claudePrompt, emailMessage, followupMessage, visitScript, whatsappMessage } from '../lib/messages'
@@ -473,6 +474,7 @@ function AiTab({ lead }: { lead: Lead }) {
 
 function CrmTab({ lead }: { lead: Lead }) {
   const { updateLead, deleteLeads, openLead, toast } = useStore()
+  const [editing, setEditing] = useState(false)
   const [notes, setNotes] = useState(lead.notes)
   const [setup, setSetup] = useState(String(lead.deal.setup ?? lead.setupRange[0]))
   const [monthly, setMonthly] = useState(String(lead.deal.monthly ?? lead.monthlyRange[0]))
@@ -512,7 +514,12 @@ function CrmTab({ lead }: { lead: Lead }) {
               onBlur={() => updateLead(lead.id, { deal: { ...lead.deal, monthly: Number(monthly) || undefined } })} />
           </label>
         </div>
-        {lead.stage === 'fechado' && lead.deal.closedAt && <div className="dim mt-s" style={{ fontSize: 12.5 }}>Fechado em {dateBR(lead.deal.closedAt)}</div>}
+        {lead.stage === 'fechado' && (
+          <label className="field mt-s" style={{ maxWidth: 220 }}><span>Data de fechamento</span>
+            <input type="date" className="input" value={(lead.deal.closedAt ?? '').slice(0, 10)}
+              onChange={(e) => e.target.value && updateLead(lead.id, { deal: { ...lead.deal, closedAt: new Date(`${e.target.value}T12:00:00`).toISOString() } })} />
+          </label>
+        )}
       </div>
 
       <div className="block">
@@ -550,7 +557,9 @@ function CrmTab({ lead }: { lead: Lead }) {
         </div>
       </div>
 
+      {editing && <LeadForm initial={lead} onClose={() => setEditing(false)} />}
       <div className="row spread mt">
+        <button className="btn sm" onClick={() => setEditing(true)}>Editar dados</button>
         <a className="btn ghost sm" href={lead.mapsUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Abrir no Google Maps</a>
         <button className="btn ghost sm danger" onClick={() => { if (confirm(`Excluir ${lead.name} do CRM?`)) { deleteLeads([lead.id]); openLead(null) } }}>
           <Trash2 size={14} /> Excluir
