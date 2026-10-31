@@ -30,7 +30,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request, waitUnti
       const lang = body.languageCode ?? 'pt-BR'
       const region = body.regionCode ?? 'BR'
       const result = env.APIFY_TOKEN
-        ? await searchApify(env.APIFY_TOKEN, queries, { language: lang.split('-')[0], countryCode: region, maxPerSearch: (body.pages ?? 1) * 20 })
+        ? await searchApify(env.APIFY_TOKEN, queries, { language: lang === 'en' ? 'en' : lang, countryCode: region, maxPerSearch: (body.pages ?? 1) * 20 })
         : await searchText(env.GOOGLE_PLACES_API_KEY!, queries[0], { languageCode: lang, regionCode: region, pages: body.pages ?? 3 })
       await writer.write(enc.encode(JSON.stringify({ ...result, provider: env.APIFY_TOKEN ? 'apify' : 'google' })))
     } catch (e) {
