@@ -15,3 +15,7 @@ run_worker_first = ["/api/*"]
 
 [observability]
 enabled = true
+
+# Mantém o Supabase grátis acordado: uma consulta leve a cada 2 dias (12h UTC).
+[triggers]
+crons = ["0 12 */2 * *"]

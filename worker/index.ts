@@ -42,4 +42,15 @@ export default {
     const run = () => handler({ ...base, next: () => Promise.resolve(new Response(null, { status: 404 })) } as unknown as EventContext<Env, string, AuthData>)
     return middleware.onRequest({ ...base, next: run } as unknown as EventContext<Env, string, AuthData>)
   },
+
+  // Agendado pela Cloudflare (wrangler.toml > triggers): faz uma consulta leve no Supabase
+  // para o projeto grátis não ser pausado por 7 dias sem uso.
+  async scheduled(_event: ScheduledController, env: WorkerEnv, ctx: ExecutionContext): Promise<void> {
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return
+    ctx.waitUntil(
+      fetch(`${env.SUPABASE_URL}/rest/v1/leads?select=id&limit=1`, {
+        headers: { apikey: env.SUPABASE_ANON_KEY, authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
+      }).then(() => undefined, () => undefined),
+    )
+  },
 } satisfies ExportedHandler<WorkerEnv>
