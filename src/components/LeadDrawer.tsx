@@ -95,6 +95,8 @@ function Header({ lead, saved }: { lead: Lead; saved: boolean }) {
               <SiteChip status={lead.siteStatus} />
               {saved && <StageTag stage={lead.stage} canceled={!!lead.deal.canceledAt} />}
               {lead.demo && <span className="demo-badge">DEMO</span>}
+              {lead.nfc?.status === 'vendida' && <span className="tag lime">Comprou a placa NFC</span>}
+              {lead.nfc?.status === 'voltar' && <span className="tag amber">Placa NFC: voltar</span>}
             </div>
             <h2 style={{ margin: '8px 0 2px', fontSize: 21, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{lead.name}</h2>
             <div className="row wrap muted" style={{ gap: 10, fontSize: 13 }}>

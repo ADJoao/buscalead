@@ -3,6 +3,7 @@
 import * as middleware from '../functions/api/_middleware'
 import * as analyze from '../functions/api/analyze'
 import * as config from '../functions/api/config'
+import * as geocodeRoute from '../functions/api/geocode'
 import * as inspect from '../functions/api/inspect'
 import * as places from '../functions/api/places'
 import * as status from '../functions/api/status'
@@ -15,6 +16,7 @@ type Handler = PagesFunction<Env, string, AuthData>
 const ROUTES: Record<string, Partial<Record<string, Handler>>> = {
   '/api/analyze': { POST: analyze.onRequestPost },
   '/api/config': { GET: config.onRequestGet as Handler },
+  '/api/geocode': { GET: geocodeRoute.onRequestGet as Handler },
   '/api/inspect': { POST: inspect.onRequestPost as Handler },
   '/api/places': { POST: places.onRequestPost as Handler },
   '/api/status': { GET: status.onRequestGet as Handler },

@@ -191,6 +191,8 @@ export async function runSearch(
       city: p.city ?? c.city,
       neighborhood: p.neighborhood,
       address: p.address,
+      lat: p.lat,
+      lng: p.lng,
       phone: p.phone,
       phoneIntl: p.phoneIntl,
       email: site?.emails[0],

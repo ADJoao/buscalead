@@ -29,8 +29,26 @@ export function searchPlaces(query: string, languageCode: string, regionCode: st
   return post<{ places: PlaceHit[]; requests: number; provider: 'apify' | 'google' }>('/api/places', { query, languageCode, regionCode, pages })
 }
 
-export function searchPlacesBatch(queries: string[], languageCode: string, regionCode: string, pages: number) {
-  return post<{ places: PlaceHit[]; requests: number; provider: 'apify' | 'google' }>('/api/places', { queries, languageCode, regionCode, pages })
+export function searchPlacesBatch(queries: string[], languageCode: string, regionCode: string, pages: number, limit?: number) {
+  return post<{ places: PlaceHit[]; requests: number; provider: 'apify' | 'google' }>('/api/places', { queries, languageCode, regionCode, pages, limit })
+}
+
+export interface GeoHit {
+  name: string
+  address: string
+  lat: number
+  lng: number
+  source: 'google-link' | 'photon' | 'nominatim'
+}
+
+/** Acha um lugar pelo nome (OpenStreetMap, grátis) ou pelo link do Google Maps. */
+export async function geocode(q: string, country = 'br', near?: { lat: number; lng: number }): Promise<GeoHit[]> {
+  const params = new URLSearchParams({ q, country })
+  if (near) params.set('near', `${near.lat},${near.lng}`)
+  const res = await fetch(`/api/geocode?${params}`, { headers: await authHeaders() })
+  const data = (await res.json().catch(() => ({}))) as { hits?: GeoHit[]; error?: string }
+  if (!res.ok || data.error) throw new Error(data.error ?? `Erro ${res.status}`)
+  return data.hits ?? []
 }
 
 export function inspectSites(urls: string[]) {

@@ -1,4 +1,4 @@
-import { Columns3, Gem, LayoutDashboard, LogOut, Radar, Search, Settings2, Users } from 'lucide-react'
+import { Columns3, Gem, LayoutDashboard, LogOut, Radar, Route, Search, Settings2, Users } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { LeadDrawer } from './LeadDrawer'
@@ -9,6 +9,7 @@ const NAV = [
   { to: '/prospectar', label: 'Buscar leads', icon: Radar },
   { to: '/leads', label: 'Leads', icon: Users, count: true },
   { to: '/pipeline', label: 'Pipeline', icon: Columns3 },
+  { to: '/rotas', label: 'Rotas', icon: Route },
   { to: '/nichos', label: 'Nichos', icon: Gem },
 ]
 

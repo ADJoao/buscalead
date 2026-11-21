@@ -83,7 +83,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const toast = useCallback((text: string, err?: boolean) => {
     const id = ++toastId.current
-    setToasts((t) => [...t, { id, text, err }])
+    setToasts((t) => [...t, { id, text, err }].slice(-2))
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), err ? 6000 : 3200)
   }, [])
 

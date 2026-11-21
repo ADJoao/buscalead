@@ -36,6 +36,10 @@ const SITE_POINTS: Record<SiteStatus, number> = {
   none: 34, social: 32, broken: 30, bad: 22, unknown: 12, pending: 15, weak: 10, good: 0,
 }
 
+export function isChain(name: string): boolean {
+  return CHAINS.test(name)
+}
+
 export function siteLabel(s: SiteStatus): string {
   return {
     none: 'Sem site', social: 'Só rede social', broken: 'Site quebrado', bad: 'Site ruim',

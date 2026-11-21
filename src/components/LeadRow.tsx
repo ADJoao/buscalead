@@ -38,6 +38,7 @@ export function LeadRow({
           {lead.tier === 'top' && <TierBadge tier="top" />}
           {lead.inCrm && <span className="tag">no CRM</span>}
           {lead.ai && <span className="tag violet">IA</span>}
+          {lead.nfc?.status === 'vendida' && <span className="tag lime">Placa NFC</span>}
         </div>
         <div className="lmeta">
           {lead.nicheLabel}

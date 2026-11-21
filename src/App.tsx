@@ -9,6 +9,7 @@ import { Login } from './pages/Login'
 import { Niches } from './pages/Niches'
 import { Pipeline } from './pages/Pipeline'
 import { Prospect } from './pages/Prospect'
+import { Routes as RoutesPage } from './pages/Routes'
 import { Settings } from './pages/Settings'
 
 export function App() {
@@ -26,6 +27,7 @@ export function App() {
           <Route path="prospectar" element={<Prospect />} />
           <Route path="leads" element={<Leads />} />
           <Route path="pipeline" element={<Pipeline />} />
+          <Route path="rotas" element={<RoutesPage />} />
           <Route path="nichos" element={<Niches />} />
           <Route path="config" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" />} />

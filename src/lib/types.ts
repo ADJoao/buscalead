@@ -66,6 +66,10 @@ export interface Lead {
   customMessage?: string
   /** site que você fez para o cliente */
   deliveredSite?: string
+  lat?: number
+  lng?: number
+  /** placa NFC de avaliação: resultado da visita */
+  nfc?: { status: 'vendida' | 'voltar' | 'recusou'; at: string }
   /** resultado de busca que já está salvo no CRM */
   inCrm?: boolean
   demo?: boolean
