@@ -76,9 +76,11 @@ interface NominatimHit {
   display_name: string
 }
 
-async function nominatim(q: string, country: string): Promise<GeoHit[]> {
+async function nominatim(q: string, country: string, near?: { lat: number; lng: number }): Promise<GeoHit[]> {
+  // viewbox = prefere (sem obrigar) resultados perto do ponto, para "Padaria X" não vir de outro estado
+  const box = near ? `&viewbox=${near.lng - 0.35},${near.lat + 0.35},${near.lng + 0.35},${near.lat - 0.35}&bounded=0` : ''
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=jsonv2&limit=6&countrycodes=${country}`,
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=jsonv2&limit=6&countrycodes=${country}${box}`,
     { headers: { 'user-agent': UA, 'accept-language': 'pt-BR' } },
   )
   if (!res.ok) return []
@@ -97,12 +99,18 @@ export async function geocode(q: string, opts: { country: string; near?: { lat: 
     const hit = await resolveMapsLink(q).catch(() => null)
     return hit ? [hit] : []
   }
-  const [a, b] = await Promise.all([photon(q, opts.near).catch(() => []), nominatim(q, opts.country).catch(() => [])])
+  const [a, b] = await Promise.all([photon(q, opts.near).catch(() => []), nominatim(q, opts.country, opts.near).catch(() => [])])
   const seen = new Set<string>()
   return [...a, ...b].filter((h) => {
     const key = `${h.lat.toFixed(4)},${h.lng.toFixed(4)}`
     if (seen.has(key)) return false
     seen.add(key)
     return true
-  }).slice(0, 8)
+  })
+    .sort((x, y) => {
+      if (!opts.near) return 0
+      const d = (h: GeoHit) => (h.lat - opts.near!.lat) ** 2 + (h.lng - opts.near!.lng) ** 2
+      return d(x) - d(y)
+    })
+    .slice(0, 8)
 }

@@ -1,5 +1,5 @@
 import {
-  ArrowDown, ArrowUp, Car, Check, Footprints, Loader2, LocateFixed, MapPin, MessageCircle, Navigation, Plus, Radar, Route,
+  ArrowDown, ArrowUp, Car, Check, ExternalLink, Footprints, Globe, Loader2, LocateFixed, MapPin, MousePointerClick, MessageCircle, Navigation, Plus, Radar, Route,
   Save, Search, Sparkles, Star, Trash2, Undo2, Users, X,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -11,7 +11,7 @@ import { CITIES, MARKET_INFO } from '../lib/locations'
 import { waLink, waNumber } from '../lib/phone'
 import { NFC_TYPES, buildReviewQueries, prospectToLead, runReviewSearch, type Prospect } from '../lib/reviewSearch'
 import {
-  directionsTo, fmtKm, fullRouteUrl, km, legKm, loadRoute, minutes, optimize, saveRoute,
+  directionsTo, fmtKm, fullRouteUrl, googleSearchUrl, km, legKm, loadRoute, minutes, optimize, placeUrl, saveRoute,
   type RouteState, type Stop, type StopStatus,
 } from '../lib/route'
 import type { Removed, SearchProgress } from '../lib/search'
@@ -307,7 +307,7 @@ function FindPlaces({ route, setRoute, goRoute }: { route: RouteState; setRoute:
                   <ScoreRing score={p.score} size={40} />
                   <div style={{ minWidth: 0 }}>
                     <div className="row" style={{ gap: 8 }}>
-                      <span className="lname">{p.place.name}</span>
+                      <a className="lname" href={placeUrl({ ...p.place, lat: p.place.lat, lng: p.place.lng })} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} title="Abrir no Google Maps">{p.place.name}</a>
                       {inRoute.has(p.place.placeId) && <span className="tag lime">na rota</span>}
                       {p.inCrm && <span className="tag">no CRM</span>}
                     </div>
@@ -362,6 +362,10 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
   const [gHits, setGHits] = useState<PlaceHit[] | null>(null)
   const [busy, setBusy] = useState<'' | 'geo' | 'apify' | 'loc'>('')
   const [picker, setPicker] = useState(false)
+  const [startQ, setStartQ] = useState('')
+  const [startHits, setStartHits] = useState<GeoHit[] | null>(null)
+  const [picking, setPicking] = useState(false)
+  const [help, setHelp] = useState(false)
   const stops = route.stops
   const legs = legKm(stops, route.start)
   const openStops = stops.filter((s) => s.status === 'pendente' || s.status === 'voltar')
@@ -446,6 +450,35 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
     )
   }
 
+  async function findStart(e?: React.FormEvent) {
+    e?.preventDefault()
+    if (!startQ.trim()) return
+    setBusy('geo')
+    try {
+      const near = stops[0] ? { lat: stops[0].lat, lng: stops[0].lng } : { lat: -22.8789, lng: -42.0189 }
+      const r = await geocode(startQ.trim(), 'br', near)
+      if (r.length === 1) {
+        setRoute((x) => ({ ...x, start: { lat: r[0].lat, lng: r[0].lng, label: r[0].name || 'Partida' } }))
+        setStartQ('')
+        setStartHits(null)
+        toast('Ponto de partida definido')
+      } else {
+        setStartHits(r)
+        if (!r.length) toast('Não achei esse endereço. Tente a rua e o bairro, ou use "Marcar no mapa".', true)
+      }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Erro ao procurar', true)
+    } finally {
+      setBusy('')
+    }
+  }
+
+  const pickStart = useCallback((p: { lat: number; lng: number }) => {
+    setRoute((x) => ({ ...x, start: { ...p, label: 'Partida' } }))
+    setPicking(false)
+    toast('Ponto de partida marcado no mapa')
+  }, [setRoute, toast])
+
   async function setStatus(s: Stop, status: StopStatus) {
     const next = s.status === status ? 'pendente' : status
     let leadId = s.leadId
@@ -496,11 +529,32 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
               <button className={route.travel === 'walking' ? 'on' : ''} onClick={() => setRoute((r) => ({ ...r, travel: 'walking' }))}><Footprints size={13} style={{ verticalAlign: -2 }} /> A pé</button>
               <button className={route.travel === 'driving' ? 'on' : ''} onClick={() => setRoute((r) => ({ ...r, travel: 'driving' }))}><Car size={13} style={{ verticalAlign: -2 }} /> Carro</button>
             </div>
-            <button className="btn sm" onClick={locate} disabled={busy === 'loc'}>{busy === 'loc' ? <Loader2 size={14} className="spin" /> : <LocateFixed size={14} />} {route.start ? 'Atualizar minha localização' : 'Partir de onde estou'}</button>
+            <button className="btn sm" onClick={locate} disabled={busy === 'loc'} title="Usa a localização do aparelho (no computador pode ser aproximada)">{busy === 'loc' ? <Loader2 size={14} className="spin" /> : <LocateFixed size={14} />} Usar minha localização</button>
+            <button className={`btn sm ${picking ? 'primary' : ''}`} onClick={() => setPicking((v) => !v)}><MousePointerClick size={14} /> {picking ? 'Clique no mapa…' : 'Marcar no mapa'}</button>
             <button className="btn primary sm" disabled={openStops.length < 2} onClick={() => { setRoute((r) => ({ ...r, stops: optimize(r.stops, r.start) })); toast('Rota reorganizada para andar menos') }}><Sparkles size={14} /> Organizar rota</button>
             {openStops.length > 0 && <a className="btn sm" href={fullRouteUrl(openStops, route.travel, route.start)} target="_blank" rel="noreferrer"><Navigation size={14} /> Rota no Google Maps</a>}
           </div>
-          <RouteMap stops={stops} start={route.start} activeId={activeId} onSelect={setActiveId} />
+          <form className="row" onSubmit={findStart}>
+            <div className="search-input" style={{ flex: 1 }}>
+              <MapPin size={15} />
+              <input className="input" placeholder="Partir de: endereço, bairro ou local (ex.: Rua Raul Veiga, Passagem)" value={startQ} onChange={(e) => setStartQ(e.target.value)} />
+            </div>
+            <button className="btn sm" disabled={busy === 'geo'}>Definir partida</button>
+            {route.start && <button type="button" className="btn ghost sm" onClick={() => setRoute((x) => ({ ...x, start: undefined }))}><X size={13} /> Tirar</button>}
+          </form>
+          {startHits && startHits.length > 1 && (
+            <div className="glass pad col" style={{ gap: 6, padding: 12 }}>
+              <div className="dim" style={{ fontSize: 12 }}>Qual deles?</div>
+              {startHits.map((h, i) => (
+                <button key={i} className="row spread" style={{ textAlign: 'left', background: 'none', border: '1px solid var(--border)', borderRadius: 10, padding: '7px 10px', cursor: 'pointer', color: 'inherit' }}
+                  onClick={() => { setRoute((x) => ({ ...x, start: { lat: h.lat, lng: h.lng, label: h.name } })); setStartHits(null); setStartQ('') }}>
+                  <span style={{ minWidth: 0 }}><span className="lname" style={{ display: 'block', fontSize: 13 }}>{h.name}</span><span className="lmeta">{h.address}</span></span>
+                  <Plus size={14} />
+                </button>
+              ))}
+            </div>
+          )}
+          <RouteMap stops={stops} start={route.start} activeId={activeId} onSelect={setActiveId} picking={picking} onPick={pickStart} />
           {stops.length > 0 && (
             <div className="row wrap dim" style={{ gap: 14, fontSize: 12.5 }}>
               <span><b className="mono" style={{ color: 'var(--text)' }}>{openStops.length}</b> para visitar</span>
@@ -524,9 +578,20 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
             </form>
             <div className="row wrap mt-s" style={{ gap: 8 }}>
               <button className="btn xs" onClick={() => setPicker(true)}><Users size={12} /> Dos meus leads</button>
-              <span className="dim" style={{ fontSize: 11.5 }}>Dica: no Google Maps, toque em Compartilhar e cole o link aqui. É o jeito mais certeiro.</span>
+              <button className="btn ghost xs" onClick={() => setHelp((v) => !v)}>{help ? 'Fechar ajuda' : 'Como pegar o link do Google Maps?'}</button>
             </div>
 
+            {help && (
+              <div className="block mt" style={{ padding: 12 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Como pegar o link no Google Maps</div>
+                <ul className="bullets num" style={{ fontSize: 13 }}>
+                  <li><b>No computador:</b> abra maps.google.com e procure a empresa. Clique no nome dela, depois em <b>Compartilhar</b> e em <b>Copiar link</b>.</li>
+                  <li><b>No celular:</b> abra o app Google Maps, toque na empresa, depois em <b>Compartilhar</b> e em <b>Copiar link</b>.</li>
+                  <li>Volte aqui, <b>cole no campo</b> acima e clique em <b>Procurar</b>. A empresa entra na rota sozinha.</li>
+                </ul>
+                <a className="btn xs mt-s" href="https://www.google.com/maps" target="_blank" rel="noreferrer"><ExternalLink size={11} /> Abrir o Google Maps</a>
+              </div>
+            )}
             {hits && (
               <div className="col mt" style={{ gap: 6 }}>
                 {hits.map((h, i) => (
@@ -569,9 +634,13 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
                 <div className={`stop ${s.status} ${s.id === activeId ? 'active' : ''} ${done ? 'done' : ''}`} onClick={() => setActiveId(s.id)}>
                   <span className="stop-n">{s.status === 'vendida' ? <Check size={15} strokeWidth={3} /> : i + 1}</span>
                   <div style={{ minWidth: 0 }}>
-                    <div className="lname">{s.name}</div>
+                    <a className="lname" style={{ display: 'block' }} href={placeUrl(s)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} title="Abrir no Google Maps">{s.name} <ExternalLink size={11} style={{ verticalAlign: -1, opacity: 0.6 }} /></a>
                     <div className="lmeta">{s.address || `${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}`}</div>
-                    {s.rating !== undefined && <div className="mt-s"><Stars rating={s.rating} reviews={s.reviews} /></div>}
+                    <div className="row wrap mt-s" style={{ gap: 8 }} onClick={(e) => e.stopPropagation()}>
+                      {s.rating !== undefined && <Stars rating={s.rating} reviews={s.reviews} />}
+                      <a className="btn xs" href={placeUrl(s)} target="_blank" rel="noreferrer"><MapPin size={11} /> Maps</a>
+                      <a className="btn xs" href={googleSearchUrl(s)} target="_blank" rel="noreferrer"><Globe size={11} /> Google</a>
+                    </div>
                     <div className="row wrap mt-s" style={{ gap: 6 }} onClick={(e) => e.stopPropagation()}>
                       {STATUS.map((st) => (
                         <button key={st.id} className={`btn xs ${s.status === st.id ? 'primary' : st.cls === 'ghost' ? 'ghost' : ''}`} onClick={() => setStatus(s, st.id)}>

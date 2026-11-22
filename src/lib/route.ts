@@ -174,3 +174,17 @@ export function fullRouteUrl(stops: Stop[], travel: Travel, start?: Point): stri
   if (mids.length) p.set('waypoints', mids.join('|'))
   return `https://www.google.com/maps/dir/?${p}`
 }
+
+/** Página da empresa no Google Maps (usa o link salvo, o código do lugar, ou procura pelo nome e endereço). */
+export function placeUrl(s: { name: string; address?: string; lat?: number; lng?: number; placeId?: string; mapsUrl?: string }): string {
+  if (s.mapsUrl) return s.mapsUrl
+  const p = new URLSearchParams({ api: '1', query: [s.name, s.address].filter(Boolean).join(' ') || `${s.lat},${s.lng}` })
+  if (s.placeId) p.set('query_place_id', s.placeId)
+  return `https://www.google.com/maps/search/?${p}`
+}
+
+/** Pesquisa no Google (para ver avaliações, site e Instagram). */
+export function googleSearchUrl(s: { name: string; address?: string }): string {
+  const city = (s.address ?? '').split(',').slice(-3, -1).join(' ')
+  return `https://www.google.com/search?q=${encodeURIComponent(`${s.name} ${city}`.trim())}`
+}

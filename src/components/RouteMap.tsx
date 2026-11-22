@@ -17,7 +17,7 @@ function stopIcon(n: number, status: Stop['status'], active: boolean) {
 const youIcon = L.divIcon({ className: '', html: '<div class="map-you"><i></i></div>', iconSize: [22, 22], iconAnchor: [11, 11] })
 
 /** Mapa com as paradas numeradas na ordem da rota e a linha ligando uma à outra. */
-export function RouteMap({ stops, start, activeId, onSelect }: { stops: Stop[]; start?: Point; activeId?: string; onSelect?: (id: string) => void }) {
+export function RouteMap({ stops, start, activeId, onSelect, picking, onPick }: { stops: Stop[]; start?: Point; activeId?: string; onSelect?: (id: string) => void; picking?: boolean; onPick?: (p: { lat: number; lng: number }) => void }) {
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const layer = useRef<L.LayerGroup | null>(null)
@@ -26,10 +26,10 @@ export function RouteMap({ stops, start, activeId, onSelect }: { stops: Stop[]; 
   useEffect(() => {
     if (!box.current || map.current) return
     const m = L.map(box.current, { zoomControl: true, attributionControl: true }).setView(CABO_FRIO, 13)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 20,
-      attribution: '© OpenStreetMap © CARTO',
+    // Mapa aberto do OpenStreetMap (sem chave). O visual escuro vem de um filtro de CSS (.route-map .leaflet-tile-pane).
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(m)
     layer.current = L.layerGroup().addTo(m)
     map.current = m
@@ -70,6 +70,20 @@ export function RouteMap({ stops, start, activeId, onSelect }: { stops: Stop[]; 
       else m.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 17 })
     }
   }, [stops, start, activeId, onSelect])
+
+  // modo "marcar no mapa": o próximo clique vira o ponto de partida
+  useEffect(() => {
+    const m = map.current
+    if (!m || !picking || !onPick) return
+    const el = m.getContainer()
+    el.style.cursor = 'crosshair'
+    const h = (e: L.LeafletMouseEvent) => onPick({ lat: e.latlng.lat, lng: e.latlng.lng })
+    m.on('click', h)
+    return () => {
+      m.off('click', h)
+      el.style.cursor = ''
+    }
+  }, [picking, onPick])
 
   useEffect(() => {
     const s = stops.find((x) => x.id === activeId)

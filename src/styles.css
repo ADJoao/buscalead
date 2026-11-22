@@ -627,3 +627,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .toasts { bottom: 92px; width: calc(100vw - 32px); }
   .toast { width: 100%; font-size: 13px; padding: 9px 12px; }
 }
+
+/* mapa escuro a partir do mapa aberto (sem chave de API) */
+.route-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.5); }
