@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { Splash } from './components/Splash'
 import { useStore } from './lib/store'
+import { Appearance } from './pages/Appearance'
 import { Dashboard } from './pages/Dashboard'
 import { Leads } from './pages/Leads'
 import { Login, NewPassword } from './pages/Login'
@@ -31,6 +32,7 @@ export function App() {
           <Route path="rotas" element={<RoutesPage />} />
           <Route path="nichos" element={<Niches />} />
           <Route path="config" element={<Settings />} />
+          <Route path="personalizar" element={<Appearance />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       </Routes>

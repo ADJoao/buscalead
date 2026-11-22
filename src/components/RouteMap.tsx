@@ -2,6 +2,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef } from 'react'
 import type { Point, Stop } from '../lib/route'
+import { useAppearance } from '../lib/theme'
 
 const CABO_FRIO: [number, number] = [-22.8789, -42.0189]
 
@@ -22,6 +23,7 @@ export function RouteMap({ stops, start, activeId, onSelect, picking, onPick }: 
   const map = useRef<L.Map | null>(null)
   const layer = useRef<L.LayerGroup | null>(null)
   const fittedFor = useRef('')
+  const { accent } = useAppearance()
 
   useEffect(() => {
     if (!box.current || map.current) return
@@ -59,8 +61,8 @@ export function RouteMap({ stops, start, activeId, onSelect, picking, onPick }: 
     const open = [start, ...stops.filter((s) => s.status === 'pendente' || s.status === 'voltar')].filter(Boolean) as Point[]
     if (open.length > 1) {
       const line = open.map((p) => [p.lat, p.lng] as L.LatLngTuple)
-      L.polyline(line, { color: '#b6f23a', weight: 8, opacity: 0.18 }).addTo(g)
-      L.polyline(line, { color: '#b6f23a', weight: 3, opacity: 0.95, dashArray: '8 8' }).addTo(g)
+      L.polyline(line, { color: accent, weight: 8, opacity: 0.18 }).addTo(g)
+      L.polyline(line, { color: accent, weight: 3, opacity: 0.95, dashArray: '8 8' }).addTo(g)
     }
     // reenquadra só quando o conjunto de pontos muda (não a cada clique)
     const key = pts.map((p) => (p as number[]).join(',')).join('|')
@@ -69,7 +71,7 @@ export function RouteMap({ stops, start, activeId, onSelect, picking, onPick }: 
       if (pts.length === 1) m.setView(pts[0], 16)
       else m.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 17 })
     }
-  }, [stops, start, activeId, onSelect])
+  }, [stops, start, activeId, onSelect, accent])
 
   // modo "marcar no mapa": o próximo clique vira o ponto de partida
   useEffect(() => {

@@ -1,5 +1,6 @@
-import { Bot, CheckCircle2, Database, Download, KeyRound, MapPinned, Sparkles, Upload, XCircle } from 'lucide-react'
+import { Palette, Bot, CheckCircle2, Database, Download, KeyRound, MapPinned, Sparkles, Upload, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Switch } from '../components/ui'
 import { AI_COST_USD } from '../components/LeadDrawer'
 import { aiUsage, localAiSpend, placesUsage, serverStatus } from '../lib/api'
@@ -43,7 +44,8 @@ export function Settings() {
   }
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
-  const dirty = JSON.stringify(form) !== JSON.stringify(settings)
+  const strip = ({ route: _r, appearance: _a, ...x }: typeof form) => x
+  const dirty = JSON.stringify(strip(form)) !== JSON.stringify(strip(settings))
   const spendBrl = (spendUsd ?? 0) * form.usdBrl
 
   const Item = ({ ok, label, hint }: { ok?: boolean; label: string; hint: string }) => (
@@ -60,7 +62,10 @@ export function Settings() {
           <h1 className="page-title">Configurações</h1>
           <p className="page-sub">Seus dados, a IA e o limite de gasto.</p>
         </div>
-        {dirty && <button className="btn primary" onClick={() => { const { route: _r, ...rest } = form; saveSettings(rest) }}>Salvar alterações</button>}
+        <div className="row" style={{ gap: 8 }}>
+          <Link to="/personalizar" className="btn"><Palette size={15} /> Personalizar visual e sons</Link>
+          {dirty && <button className="btn primary" onClick={() => { const { route: _r, appearance: _a, ...rest } = form; saveSettings(rest) }}>Salvar alterações</button>}
+        </div>
       </div>
 
       <div className="grid g-2">

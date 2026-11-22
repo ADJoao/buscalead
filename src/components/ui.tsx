@@ -18,7 +18,7 @@ export function ScoreRing({ score, size = 46, stroke = 4 }: { score: number; siz
           cx={size / 2} cy={size / 2} r={r}
           stroke={color} strokeWidth={stroke} fill="none" strokeLinecap="round"
           strokeDasharray={c} strokeDashoffset={c * (1 - score / 100)}
-          style={{ filter: score >= 78 ? 'drop-shadow(0 0 6px rgba(182,242,58,.55))' : undefined, transition: 'stroke-dashoffset .6s ease' }}
+          style={{ filter: score >= 78 ? 'drop-shadow(0 0 6px rgba(var(--accent-rgb),.55))' : undefined, transition: 'stroke-dashoffset .6s ease' }}
         />
       </svg>
       <span className="val" style={{ fontSize: size * 0.32 }}>{score}</span>

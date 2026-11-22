@@ -168,7 +168,7 @@ export function Prospect() {
         </div>
 
         {mode === 'mine' && (
-          <div className="block" style={{ marginBottom: 16, borderColor: 'rgba(182,242,58,.25)', background: 'rgba(182,242,58,.04)' }}>
+          <div className="block" style={{ marginBottom: 16, borderColor: 'rgba(var(--accent-rgb),.25)', background: 'rgba(var(--accent-rgb),.04)' }}>
             <div className="row" style={{ gap: 10 }}><Pickaxe size={16} className="accent" /><b>Modo mineração</b></div>
             <div className="muted" style={{ fontSize: 13.5, marginTop: 4 }}>
               Escolhi os nichos com maior ticket e maior chance de fechar{lagos ? ', com peso extra para turismo e temporada da Região dos Lagos' : ''}. Pode tirar ou colocar mais abaixo.

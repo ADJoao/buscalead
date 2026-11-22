@@ -2,7 +2,10 @@ import type { Session } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { demoLeads } from './demo'
 import { uid } from './format'
+import { celebrate } from './fx'
+import { play } from './sound'
 import { supabase } from './supabase'
+import { applyAppearance } from './theme'
 import { DEFAULT_SETTINGS, type Lead, type Settings, type TimelineEvent } from './types'
 
 interface Toast {
@@ -89,6 +92,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toast = useCallback((text: string, err?: boolean) => {
     const id = ++toastId.current
     setToasts((t) => [...t, { id, text, err }].slice(-2))
+    play(err ? 'error' : 'notify')
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), err ? 6000 : 3200)
   }, [])
 
@@ -113,7 +117,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setLoading(true)
       if (!supabase) {
         setRealLeads(lsGet<Lead[]>(LS_LEADS, []))
-        setSettings({ ...DEFAULT_SETTINGS, ...lsGet<Partial<Settings>>(LS_SETTINGS, {}) })
+        const loaded = { ...DEFAULT_SETTINGS, ...lsGet<Partial<Settings>>(LS_SETTINGS, {}) }
+        setSettings(loaded)
+        if (loaded.appearance) applyAppearance(loaded.appearance)
         setLoading(false)
         return
       }
@@ -128,7 +134,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!alive) return
       if (leadsRes.error) toast(`Erro ao carregar leads: ${leadsRes.error.message}`, true)
       setRealLeads(((leadsRes.data ?? []) as Row[]).map(fromRow))
-      setSettings({ ...DEFAULT_SETTINGS, ...((setRes.data?.data as Partial<Settings>) ?? {}) })
+      const loaded = { ...DEFAULT_SETTINGS, ...((setRes.data?.data as Partial<Settings>) ?? {}) }
+      setSettings(loaded)
+      if (loaded.appearance) applyAppearance(loaded.appearance)
       setLoading(false)
     }
     load()
@@ -162,6 +170,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return []
         }
       }
+      if (fresh.some((l) => (l.stage === 'fechado' && !l.deal?.canceledAt) || l.nfc?.status === 'vendida')) celebrate('money')
       setRealLeads((prev) => {
         const next = [...fresh, ...prev].sort((a, b) => b.score - a.score)
         if (!supabase) persistLocal(next)
@@ -193,6 +202,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return list
       })
       setDrawer((d) => (d?.id === id ? next : d))
+      // entrou dinheiro: fechou contrato ou vendeu a placa
+      const closed = patch.stage === 'fechado' && cur.stage !== 'fechado'
+      const plate = patch.nfc?.status === 'vendida' && cur.nfc?.status !== 'vendida'
+      if (closed || plate) celebrate('money')
       if (supabase) {
         const { error } = await supabase.from('leads').update(toRow(next)).eq('id', id)
         if (error) toast(`Erro ao salvar: ${error.message}`, true)
@@ -238,6 +251,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const openLead = useCallback(
     (lead: Lead | null) => {
+      play(lead ? 'open' : 'close')
       if (lead && !lead.id.startsWith('tmp-')) {
         setDrawer(leads.find((l) => l.id === lead.id) ?? lead)
       } else setDrawer(lead)

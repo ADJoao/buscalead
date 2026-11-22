@@ -167,7 +167,7 @@ function Diagnosis({ lead }: { lead: Lead }) {
   const s = lead.site
   return (
     <>
-      <div className="block" style={{ borderColor: 'rgba(182,242,58,.25)', background: 'rgba(182,242,58,.04)' }}>
+      <div className="block" style={{ borderColor: 'rgba(var(--accent-rgb),.25)', background: 'rgba(var(--accent-rgb),.04)' }}>
         <h4><Target size={15} className="accent" /> Proposta recomendada: {pkg.label}</h4>
         <div className="row wrap" style={{ gap: 28 }}>
           <div>
@@ -250,7 +250,7 @@ function Approach({ lead, saved }: { lead: Lead; saved: boolean }) {
   return (
     <>
       {nfc && (
-        <div className="block" style={{ borderColor: 'rgba(182,242,58,.3)', background: 'rgba(182,242,58,.05)' }}>
+        <div className="block" style={{ borderColor: 'rgba(var(--accent-rgb),.3)', background: 'rgba(var(--accent-rgb),.05)' }}>
           <h4><Sparkles size={15} className="accent" /> Ele comprou a placa: hora de oferecer o site</h4>
           <p className="muted" style={{ margin: '0 0 10px', fontSize: 13.5 }}>
             Ele já te conhece e confia. A prova mais forte é o crescimento das avaliações: confira no Google quantas ele tem hoje e preencha abaixo, que a mensagem usa o número.
@@ -429,7 +429,7 @@ function AiTab({ lead }: { lead: Lead }) {
         {a.contatos_encontrados.outros && <div className="dim mt-s" style={{ fontSize: 12.5 }}>{a.contatos_encontrados.outros}</div>}
       </div>
 
-      <div className="block" style={{ borderColor: 'rgba(182,242,58,.25)', background: 'rgba(182,242,58,.04)' }}>
+      <div className="block" style={{ borderColor: 'rgba(var(--accent-rgb),.25)', background: 'rgba(var(--accent-rgb),.04)' }}>
         <h4><Target size={15} className="accent" /> {p.nome}</h4>
         <div className="row wrap" style={{ gap: 28 }}>
           <div><div className="dim" style={{ fontSize: 12 }}>Setup</div><div className="price">{money(p.setup_min, p.moeda || lead.currency)}–{money(p.setup_max, p.moeda || lead.currency)}</div></div>
@@ -474,7 +474,7 @@ function AiTab({ lead }: { lead: Lead }) {
 
       <div className="block">
         <h4>Ideia do hero (prévia para mostrar)</h4>
-        <div className="glass pad" style={{ background: 'linear-gradient(135deg, rgba(182,242,58,.08), rgba(20,160,144,.06))' }}>
+        <div className="glass pad" style={{ background: 'linear-gradient(135deg, rgba(var(--accent-rgb),.08), rgba(20,160,144,.06))' }}>
           <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{a.ideia_hero.headline}</div>
           <div className="muted mt-s">{a.ideia_hero.subheadline}</div>
           <span className="btn primary sm mt" style={{ pointerEvents: 'none' }}>{a.ideia_hero.cta}</span>

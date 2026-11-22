@@ -1,5 +1,6 @@
-import { Columns3, Gem, LayoutDashboard, LogOut, Radar, Route, Search, Settings2, Users } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Columns3, Gem, LayoutDashboard, LogOut, Palette, Radar, Route, Search, Settings2, Users } from 'lucide-react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useAppearance } from '../lib/theme'
 import { useStore } from '../lib/store'
 import { LeadDrawer } from './LeadDrawer'
 import { Toasts } from './ui'
@@ -16,6 +17,8 @@ const NAV = [
 export function Layout() {
   const { leads, settings, mode, session, signOut, drawer } = useStore()
   const active = leads.filter((l) => l.stage !== 'perdido').length
+  const loc = useLocation()
+  const look = useAppearance()
 
   return (
     <div className="app">
@@ -23,7 +26,7 @@ export function Layout() {
         <div className="brand">
           <div className="brand-mark"><Search size={19} strokeWidth={2.8} /></div>
           <div>
-            <div className="brand-name">BuscaLead</div>
+            <div className="brand-name">{look.brandName?.trim() || 'BuscaLead'}</div>
             <div className="brand-sub">{settings.agencyName}</div>
           </div>
         </div>
@@ -35,6 +38,9 @@ export function Layout() {
           </NavLink>
         ))}
         <div className="nav-sep" />
+        <NavLink to="/personalizar" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Palette size={18} /> Personalizar
+        </NavLink>
         <NavLink to="/config" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Settings2 size={18} /> Configurações
         </NavLink>
@@ -58,7 +64,9 @@ export function Layout() {
       </aside>
 
       <main className="main">
-        <Outlet />
+        <div key={loc.pathname} className="page-enter">
+          <Outlet />
+        </div>
       </main>
 
       <nav className="mobile-nav">

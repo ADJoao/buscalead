@@ -1,12 +1,13 @@
 import { ArrowUpRight, BadgeDollarSign, CalendarClock, Nfc, ChevronLeft, ChevronRight, Flame, Handshake, Percent, Plus, Radar, Repeat, Target, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { LeadForm } from '../components/LeadForm'
 import { ScoreRing } from '../components/ui'
 import { money, num, pct } from '../lib/format'
 import { focusList } from '../lib/priority'
 import { useStore } from '../lib/store'
+import { hexToRgb, useAppearance } from '../lib/theme'
 import { STAGES, isActiveClient, type Lead, type Settings } from '../lib/types'
 
 const ORDER = STAGES.map((s) => s.id)
@@ -47,6 +48,7 @@ function ChartTip({ active, payload, label }: TipProps) {
 
 export function Dashboard() {
   const { leads, settings, openLead } = useStore()
+  const look = useAppearance()
   const now = new Date()
   // todos que já foram clientes (inclui cancelados) e os que ainda pagam
   const closed = leads.filter((l) => l.stage === 'fechado')
@@ -232,9 +234,9 @@ export function Dashboard() {
                 <ComposedChart data={months} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#b6f23a" stopOpacity={0.42} />
-                      <stop offset="55%" stopColor="#b6f23a" stopOpacity={0.12} />
-                      <stop offset="100%" stopColor="#b6f23a" stopOpacity={0} />
+                      <stop offset="0%" stopColor={look.accent} stopOpacity={0.42} />
+                      <stop offset="55%" stopColor={look.accent} stopOpacity={0.12} />
+                      <stop offset="100%" stopColor={look.accent} stopOpacity={0} />
                     </linearGradient>
                     <filter id="glow" x="-20%" y="-50%" width="140%" height="200%">
                       <feGaussianBlur stdDeviation="5" result="b" />
@@ -244,11 +246,11 @@ export function Dashboard() {
                   <CartesianGrid vertical={false} stroke="rgba(255,255,255,.05)" strokeDasharray="2 6" />
                   <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fill: '#8a958e', fontSize: 12 }} padding={{ left: 14, right: 14 }} />
                   <YAxis tickLine={false} axisLine={false} width={64} tick={{ fill: '#6f7a73', fontSize: 11, fontFamily: 'Geist Mono' }} tickFormatter={(v: number) => money(v, 'BRL', true)} />
-                  <Tooltip content={<ChartTip />} cursor={{ stroke: 'rgba(182,242,58,.35)', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                  <Tooltip content={<ChartTip />} cursor={{ stroke: `rgba(${hexToRgb(look.accent).join(',')},.35)`, strokeWidth: 1, strokeDasharray: '4 4' }} />
                   <Area
-                    type="monotone" dataKey="total" name="Total" stroke="#b6f23a" strokeWidth={3} fill="url(#gTotal)" filter="url(#glow)"
-                    dot={{ r: 4, fill: '#0b0f0d', stroke: '#b6f23a', strokeWidth: 2.5 }}
-                    activeDot={{ r: 7, fill: '#b6f23a', stroke: 'rgba(182,242,58,.35)', strokeWidth: 8 }}
+                    type="monotone" dataKey="total" name="Total" stroke={look.accent} strokeWidth={3} fill="url(#gTotal)" filter="url(#glow)"
+                    dot={{ r: 4, fill: '#0b0f0d', stroke: look.accent, strokeWidth: 2.5 }}
+                    activeDot={{ r: 7, fill: look.accent, stroke: `rgba(${hexToRgb(look.accent).join(',')},.35)`, strokeWidth: 8 }}
                     animationDuration={1100}
                   />
                   <Line type="monotone" dataKey="mensal" name="Mensalidades" stroke="var(--series-3)" strokeWidth={1.8} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} animationDuration={1100} />
@@ -413,7 +415,7 @@ function Kpi({ icon, label, value, foot, hero }: { icon: React.ReactNode; label:
   return (
     <div ref={ref} className={`glass kpi tilt ${hero ? 'hero glow' : ''}`} onMouseMove={move} onMouseLeave={leave}>
       <div className="kpi-label">{icon}{label}</div>
-      <div className="kpi-value">{value}</div>
+      <div className="kpi-value"><CountUp value={value} /></div>
       {foot && <div className="kpi-foot">{hero && <ArrowUpRight size={12} className="accent" style={{ verticalAlign: -2 }} />} {foot}</div>}
     </div>
   )
@@ -445,4 +447,32 @@ function BarList({ title, sub, rows }: { title: string; sub: string; rows: [stri
       </div>
     </div>
   )
+}
+
+/** Faz o número do cartão "subir" até o valor (R$ 0 → R$ 4.380) quando aparece ou muda. */
+function CountUp({ value }: { value: string }) {
+  const m = value.match(/^(.*?)(\d[\d.]*(?:,\d+)?)(.*)$/)
+  const target = m ? Number(m[2].replace(/\./g, '').replace(',', '.')) : NaN
+  const decimals = m?.[2].includes(',') ? m[2].split(',')[1].length : 0
+  const [shown, setShown] = useState(Number.isFinite(target) ? 0 : target)
+  const from = useRef(0)
+  useEffect(() => {
+    if (!Number.isFinite(target)) return
+    if (document.documentElement.dataset.motion === 'nenhum') { setShown(target); from.current = target; return }
+    const start = performance.now()
+    const a = from.current
+    const dur = 900
+    let raf = 0
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - start) / dur)
+      const e = 1 - (1 - k) ** 3
+      setShown(a + (target - a) * e)
+      if (k < 1) raf = requestAnimationFrame(tick)
+      else from.current = target
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+  if (!m || !Number.isFinite(target)) return <>{value}</>
+  return <>{m[1]}{shown.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{m[3]}</>
 }

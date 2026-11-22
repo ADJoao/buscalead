@@ -97,6 +97,7 @@ export interface Settings {
   minRating: number
   includeWeakSites: boolean
   demoMode: boolean
+  appearance?: Partial<import('./theme').Appearance>
   /** preço que você cobra pela placa NFC (R$) */
   nfcPrice: number
   /** rota salva (sincroniza entre aparelhos) */
