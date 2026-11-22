@@ -78,7 +78,7 @@ function FindPlaces({ route, setRoute, goRoute }: { route: RouteState; setRoute:
   const [minRating, setMinRating] = useState(4.5)
   const [minReviews, setMinReviews] = useState(5)
   const [maxReviews, setMaxReviews] = useState(200)
-  const [perSearch, setPerSearch] = useState(20)
+  const [budget, setBudget] = useState(0.3)
   const [provider, setProvider] = useState<'apify' | 'google'>('apify')
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<SearchProgress | null>(null)
@@ -104,15 +104,19 @@ function FindPlaces({ route, setRoute, goRoute }: { route: RouteState; setRoute:
   }, [market])
 
   const existing = useMemo(() => new Set(realLeads.map((l) => l.placeId).filter(Boolean) as string[]), [realLeads])
-  const params = { market, cityIds, customCity, areas, terms, minRating, minReviews, maxReviews, perSearch, provider, existingPlaceIds: existing }
-  const queries = buildReviewQueries(params)
+  const queries = buildReviewQueries({ market, cityIds, customCity, areas, terms, minRating, minReviews, maxReviews, perSearch: 20, provider, existingPlaceIds: existing })
+  // O gasto é por lugar encontrado (≈ US$ 0,005). O orçamento é dividido entre as buscas: mais bairros e tipos = menos lugares por busca.
+  const perSearch = Math.min(60, Math.floor(budget / 0.005 / Math.max(1, queries.length)))
+  const tooMany = queries.length > 0 && perSearch < 5
   const estUsd = queries.length * perSearch * 0.005
+  const params = { market, cityIds, customCity, areas, terms, minRating, minReviews, maxReviews, perSearch, provider, existingPlaceIds: existing }
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
   const inRoute = new Set(route.stops.map((s) => s.placeId).filter(Boolean))
 
   async function start() {
     if (!queries.length) return toast('Escolha ao menos um lugar e um tipo de negócio.', true)
     if (minReviews > maxReviews) return toast('O mínimo de avaliações está maior que o máximo.', true)
+    if (tooMany) return toast(`Muitas buscas (${queries.length}) para o orçamento. Tire alguns bairros ou tipos de negócio.`, true)
     cancel.current = { cancelled: false }
     setRunning(true)
     setSelected(new Set())
@@ -247,19 +251,23 @@ function FindPlaces({ route, setRoute, goRoute }: { route: RouteState; setRoute:
         </div>
 
         <div className="row wrap mt" style={{ gap: 14, alignItems: 'flex-end' }}>
-          <label className="field" style={{ width: 170 }}>
-            <span>Resultados por busca</span>
-            <select className="select" value={perSearch} onChange={(e) => setPerSearch(Number(e.target.value))}>
-              {[20, 40, 60].map((n) => <option key={n} value={n}>{n}</option>)}
+          <label className="field" style={{ width: 200 }}>
+            <span>Gastar no máximo</span>
+            <select className="select" value={budget} onChange={(e) => setBudget(Number(e.target.value))}>
+              {[0.15, 0.3, 0.5, 1].map((n) => <option key={n} value={n}>US$ {n.toFixed(2)} (≈ R$ {(n * 5.5).toFixed(2).replace('.', ',')})</option>)}
             </select>
           </label>
           <div style={{ flex: 1 }} />
-          <div className="dim" style={{ fontSize: 12.5, textAlign: 'right' }}>
-            {queries.length} busca(s) × até {perSearch} lugares{provider === 'apify' && <> ≈ <b className="mono" style={{ color: 'var(--text)' }}>US$ {estUsd.toFixed(2)}</b> do crédito do Apify</>}
+          <div style={{ fontSize: 12.5, textAlign: 'right', maxWidth: 420 }}>
+            <div className="dim">
+              {queries.length} busca(s){!tooMany && <> × até <b className="mono" style={{ color: 'var(--text)' }}>{perSearch}</b> lugares</>}
+              {provider === 'apify' && !tooMany && <> ≈ <b className="mono" style={{ color: 'var(--text)' }}>US$ {estUsd.toFixed(2)}</b> do crédito do Apify</>}
+            </div>
+            {tooMany && <div style={{ color: 'var(--bad)', marginTop: 2 }}>Muitas buscas para esse orçamento. Cada bairro × cada tipo é uma busca: tire bairros ou tipos.</div>}
           </div>
           {running
             ? <button className="btn lg" onClick={() => { cancel.current.cancelled = true }}>Parar</button>
-            : <button className="btn primary lg" onClick={start} disabled={!queries.length}><Radar size={18} /> Buscar lugares</button>}
+            : <button className="btn primary lg" onClick={start} disabled={!queries.length || tooMany}><Radar size={18} /> Buscar lugares</button>}
         </div>
       </div>
 

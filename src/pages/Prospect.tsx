@@ -91,6 +91,7 @@ export function Prospect() {
   async function start() {
     if (!queries.length) return toast('Escolha ao menos uma cidade e um nicho.', true)
     if (estRequests > 150) return toast('Busca grande demais. Escolha menos bairros/nichos.', true)
+    if (provider === 'apify' && estApifyUsd > 1) return toast(`Essa busca custaria ≈ US$ ${estApifyUsd.toFixed(2)}, acima do teto de US$ 1 por busca. Tire bairros ou nichos.`, true)
     cancel.current = { cancelled: false }
     setRunning(true)
     setSelected(new Set())
@@ -228,7 +229,7 @@ export function Prospect() {
           <div style={{ flex: 1 }} />
           <div className="dim" style={{ fontSize: 12.5, textAlign: 'right' }}>
             {provider === 'apify' ? (
-              <>até {queries.length * depth * 20} empresas ≈ <b className="mono" style={{ color: 'var(--text)' }}>US$ {estApifyUsd.toFixed(2)}</b> do crédito grátis do Apify</>
+              <>até {queries.length * depth * 20} empresas ≈ <b className="mono" style={{ color: estApifyUsd > 1 ? 'var(--bad)' : 'var(--text)' }}>US$ {estApifyUsd.toFixed(2)}</b> do crédito grátis do Apify{estApifyUsd > 1 && <span style={{ color: 'var(--bad)' }}> · acima do teto, reduza</span>}</>
             ) : (
               <>{queries.length} busca(s) × {depth} página(s) ≈ <b className="mono" style={{ color: 'var(--text)' }}>{estRequests}</b> da cota grátis</>
             )}
