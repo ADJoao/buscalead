@@ -5,7 +5,7 @@ import { Splash } from './components/Splash'
 import { useStore } from './lib/store'
 import { Dashboard } from './pages/Dashboard'
 import { Leads } from './pages/Leads'
-import { Login } from './pages/Login'
+import { Login, NewPassword } from './pages/Login'
 import { Niches } from './pages/Niches'
 import { Pipeline } from './pages/Pipeline'
 import { Prospect } from './pages/Prospect'
@@ -13,9 +13,10 @@ import { Routes as RoutesPage } from './pages/Routes'
 import { Settings } from './pages/Settings'
 
 export function App() {
-  const { mode, session, authReady, loading, settings } = useStore()
+  const { mode, session, authReady, loading, settings, recovery, endRecovery, toast } = useStore()
   const [splashDone, setSplashDone] = useState(false)
   const done = useCallback(() => setSplashDone(true), [])
+  if (recovery && session) return <NewPassword onDone={() => { endRecovery(); toast('Senha nova salva') }} />
   if (authReady && mode === 'supabase' && !session) return <Login />
   const ready = authReady && !loading
   if (!splashDone) return <Splash ready={ready} name={settings.ownerName} onDone={done} />

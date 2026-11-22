@@ -99,6 +99,7 @@ export function demoLeads(): Lead[] {
         ? { setup: Math.round((a + ((b - a) * (i % 4)) / 3) / 50) * 50, monthly: c + ((d - c) * (i % 3)) / 2, closedAt }
         : stage === 'proposta' ? { setup: b, monthly: d } : {},
       contactedAt: stage === 'novo' ? undefined : new Date(now - ((i % 5) + 1) * DAY).toISOString(),
+      nfc: i % 3 === 0 ? { status: 'vendida', at: new Date(now - ((i * 11) % 150) * DAY).toISOString(), value: 90, reviewsAtSale: reviews - 20, reviewsNow: reviews, reviewsNowAt: new Date(now - DAY).toISOString() } : undefined,
       notes: '',
       timeline: [],
       demo: true,

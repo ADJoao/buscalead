@@ -27,6 +27,10 @@ interface Store {
   toast: (text: string, err?: boolean) => void
   toasts: Toast[]
   drawer: Lead | null
+  /** abriu o link de recuperação de senha do e-mail */
+  recovery: boolean
+  endRecovery: () => void
+  restoreLeads: (leads: Lead[]) => Promise<number>
   openLead: (lead: Lead | null) => void
   signOut: () => Promise<void>
 }
@@ -79,6 +83,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [drawer, setDrawer] = useState<Lead | null>(null)
+  const [recovery, setRecovery] = useState(false)
   const toastId = useRef(0)
 
   const toast = useCallback((text: string, err?: boolean) => {
@@ -94,7 +99,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSession(data.session)
       setAuthReady(true)
     })
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    const { data } = supabase.auth.onAuthStateChange((e, s) => {
+      if (e === 'PASSWORD_RECOVERY') setRecovery(true)
+      setSession(s)
+    })
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -237,6 +245,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [leads],
   )
 
+  const restoreLeads = useCallback(
+    async (incoming: Lead[]) => {
+      const byPlace = new Map(realLeads.filter((l) => l.placeId).map((l) => [l.placeId!, l.id]))
+      const clean = incoming
+        .filter((l) => l && l.id && l.name && !l.demo && !String(l.id).startsWith('tmp-'))
+        // mesmo lugar do Google com outro id = já existe: não duplica
+        .filter((l) => !(l.placeId && byPlace.has(l.placeId) && byPlace.get(l.placeId) !== l.id))
+      if (!clean.length) return 0
+      if (supabase) {
+        const { error } = await supabase.from('leads').upsert(clean.map(toRow), { onConflict: 'id' })
+        if (error) {
+          toast(`Erro ao restaurar: ${error.message}`, true)
+          return 0
+        }
+      }
+      setRealLeads((prev) => {
+        const map = new Map(prev.map((l) => [l.id, l]))
+        for (const l of clean) map.set(l.id, { ...l, inCrm: undefined })
+        const next = [...map.values()].sort((a, b) => b.score - a.score)
+        if (!supabase) persistLocal(next)
+        return next
+      })
+      return clean.length
+    },
+    [realLeads, toast],
+  )
+
   const signOut = useCallback(async () => {
     await supabase?.auth.signOut()
     setRealLeads([])
@@ -245,6 +280,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value: Store = {
     mode, session, authReady, loading, leads, realLeads, settings,
     saveLeads, updateLead, deleteLeads, saveSettings, toast, toasts, drawer, openLead, signOut,
+    recovery, endRecovery: () => setRecovery(false), restoreLeads,
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

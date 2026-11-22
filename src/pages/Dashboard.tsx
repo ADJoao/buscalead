@@ -1,4 +1,4 @@
-import { ArrowUpRight, BadgeDollarSign, CalendarClock, ChevronLeft, ChevronRight, Flame, Handshake, Percent, Plus, Radar, Repeat, Target, Wallet } from 'lucide-react'
+import { ArrowUpRight, BadgeDollarSign, CalendarClock, Nfc, ChevronLeft, ChevronRight, Flame, Handshake, Percent, Plus, Radar, Repeat, Target, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useRef, useState } from 'react'
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -52,6 +52,7 @@ export function Dashboard() {
   const closed = leads.filter((l) => l.stage === 'fechado')
   const active = closed.filter((l) => isActiveClient(l, now))
   const canceledCount = closed.length - active.length
+  const plates = leads.filter((l) => l.nfc?.status === 'vendida')
   const mrr = active.reduce((s, l) => s + toBRL(l.deal.monthly ?? 0, l.currency, settings), 0)
   const sameMonth = (iso?: string) => {
     if (!iso) return false
@@ -65,6 +66,12 @@ export function Dashboard() {
   const pipeline = leads
     .filter((l) => l.stage === 'proposta' || l.stage === 'reuniao' || l.stage === 'respondeu')
     .reduce((s, l) => s + toBRL(l.deal.setup ?? l.setupRange[0], l.currency, settings), 0)
+  const plateRevenue = plates.reduce((sum, l) => sum + toBRL(l.nfc!.value ?? 0, l.currency, settings), 0)
+  const plateToSite = plates.filter((l) => l.stage === 'fechado').length
+  const hotPlates = plates
+    .filter((l) => l.stage !== 'fechado' && l.stage !== 'perdido')
+    .sort((a, b) => a.nfc!.at.localeCompare(b.nfc!.at))
+    .slice(0, 5)
   const goalPct = settings.mrrGoal ? Math.min(1, mrr / settings.mrrGoal) : 0
   const hot = leads.filter((l) => l.tier === 'top' && l.stage === 'novo').length
 
@@ -78,6 +85,11 @@ export function Dashboard() {
     let mensal = 0
     let setup = 0
     let novos = 0
+    let placa = 0
+    for (const l of plates) {
+      const c = new Date(l.nfc!.at)
+      if (c.getMonth() === d.getMonth() && c.getFullYear() === d.getFullYear()) placa += toBRL(l.nfc!.value ?? 0, l.currency, settings)
+    }
     for (const l of closed) {
       if (!l.deal.closedAt) continue
       const c = new Date(l.deal.closedAt)
@@ -89,7 +101,7 @@ export function Dashboard() {
         novos++
       }
     }
-    return { mensal, setup, novos }
+    return { mensal, setup, novos, placa }
   }
   // o gráfico começa um mês antes do primeiro cliente e termina no mês atual (sem meses vazios sobrando)
   const curMonth = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -118,7 +130,8 @@ export function Dashboard() {
       full: d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
       mensal: future ? null : r.mensal,
       setup: future ? null : r.setup,
-      total: future ? null : r.mensal + r.setup,
+      placa: future ? null : r.placa,
+      total: future ? null : r.mensal + r.setup + r.placa,
       novos: r.novos,
     }
   })
@@ -126,7 +139,7 @@ export function Dashboard() {
   const elapsed = months.filter((m) => m.total !== null).length
   const thisMonth = monthRevenue(new Date(now.getFullYear(), now.getMonth(), 1))
   const yearTotal = Array.from({ length: now.getMonth() + 1 }, (_, i) => monthRevenue(new Date(now.getFullYear(), i, 1)))
-    .reduce((s, r) => s + r.mensal + r.setup, 0)
+    .reduce((s, r) => s + r.mensal + r.setup + r.placa, 0)
   const [selKey, setSelKey] = useState(`${now.getFullYear()}-${now.getMonth()}`)
   const sel = months.find((m) => m.key === selKey) ?? months.filter((m) => m.total !== null).at(-1) ?? months[0]
 
@@ -162,7 +175,7 @@ export function Dashboard() {
 
       <div className="grid kpis">
         <Kpi hero icon={<Repeat size={14} />} label="Receita recorrente (MRR)" value={money(mrr)} foot={`${pct(goalPct)} da meta de ${money(settings.mrrGoal)}`} />
-        <Kpi icon={<Wallet size={14} />} label="Faturamento do mês" value={money(thisMonth.mensal + thisMonth.setup)} foot={`${money(yearTotal)} no ano de ${now.getFullYear()}`} />
+        <Kpi icon={<Wallet size={14} />} label="Faturamento do mês" value={money(thisMonth.mensal + thisMonth.setup + thisMonth.placa)} foot={`${money(yearTotal)} no ano de ${now.getFullYear()}`} />
         <Kpi icon={<Handshake size={14} />} label="Clientes ativos" value={num(active.length)} foot={`+${closedThisMonth.length} este mês${canceledCount ? ` · ${canceledCount} cancelado${canceledCount > 1 ? 's' : ''}` : ''}`} />
         <Kpi icon={<Percent size={14} />} label="Conversão" value={pct(conversion)} foot={`${closed.length} de ${contacted.length} contatados`} />
         <Kpi icon={<BadgeDollarSign size={14} />} label="Ticket médio (setup)" value={money(avgTicket)} foot={`LTV 12m ≈ ${money(avgTicket + (active.length ? mrr / active.length : 0) * 12)}`} />
@@ -201,6 +214,7 @@ export function Dashboard() {
             {chart === 'linha' && <span><i style={{ background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />Total</span>}
             <span><i style={{ background: 'var(--series-3)' }} />Mensalidades</span>
             <span><i style={{ background: 'var(--series-2)' }} />Setup</span>
+            {months.some((m) => (m.placa ?? 0) > 0) && <span><i style={{ background: 'var(--series-4)' }} />Placas NFC</span>}
           </div>
           <div style={{ height: 260, marginTop: 10, marginLeft: -10 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -211,7 +225,8 @@ export function Dashboard() {
                   <YAxis tickLine={false} axisLine={false} width={64} tick={{ fill: '#6f7a73', fontSize: 11, fontFamily: 'Geist Mono' }} tickFormatter={(v: number) => money(v, 'BRL', true)} />
                   <Tooltip content={<ChartTip />} cursor={{ fill: 'rgba(255,255,255,.035)' }} />
                   <Bar dataKey="mensal" name="Mensalidades" stackId="r" fill="var(--series-3)" stroke="#0b0f0d" strokeWidth={1.5} />
-                  <Bar dataKey="setup" name="Setup" stackId="r" fill="var(--series-2)" stroke="#0b0f0d" strokeWidth={1.5} radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="setup" name="Setup" stackId="r" fill="var(--series-2)" stroke="#0b0f0d" strokeWidth={1.5} />
+                  <Bar dataKey="placa" name="Placas NFC" stackId="r" fill="var(--series-4)" stroke="#0b0f0d" strokeWidth={1.5} radius={[5, 5, 0, 0]} />
                 </BarChart>
               ) : (
                 <ComposedChart data={months} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
@@ -238,6 +253,7 @@ export function Dashboard() {
                   />
                   <Line type="monotone" dataKey="mensal" name="Mensalidades" stroke="var(--series-3)" strokeWidth={1.8} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} animationDuration={1100} />
                   <Line type="monotone" dataKey="setup" name="Setup" stroke="var(--series-2)" strokeWidth={1.8} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} animationDuration={1100} />
+                  {months.some((m) => (m.placa ?? 0) > 0) && <Line type="monotone" dataKey="placa" name="Placas NFC" stroke="var(--series-4)" strokeWidth={1.8} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} animationDuration={1100} />}
                 </ComposedChart>
               )}
             </ResponsiveContainer>
@@ -253,6 +269,7 @@ export function Dashboard() {
               <div><div className="dim" style={{ fontSize: 11.5 }}>Total do mês</div><div className="mono" style={{ fontWeight: 650, fontSize: 16 }}>{money(sel.total ?? 0)}</div></div>
               <div><div className="dim" style={{ fontSize: 11.5 }}>Mensalidades</div><div className="mono" style={{ fontSize: 16 }}>{money(sel.mensal ?? 0)}</div></div>
               <div><div className="dim" style={{ fontSize: 11.5 }}>Setup</div><div className="mono" style={{ fontSize: 16 }}>{money(sel.setup ?? 0)}</div></div>
+              {(sel.placa ?? 0) > 0 && <div><div className="dim" style={{ fontSize: 11.5 }}>Placas NFC</div><div className="mono" style={{ fontSize: 16 }}>{money(sel.placa ?? 0)}</div></div>}
               <div><div className="dim" style={{ fontSize: 11.5 }}>Novos clientes</div><div className="mono" style={{ fontSize: 16 }}>{sel.novos}</div></div>
             </div>
           </div>
@@ -294,6 +311,38 @@ export function Dashboard() {
 
         <BarList title="Leads por nicho" sub="Onde está o seu funil" rows={byNiche} />
         <BarList title="Leads por cidade" sub="Concentração geográfica" rows={byCity} />
+      </div>
+
+      <div className="grid g-2 mt top-align">
+        <div className="glass pad">
+          <h3 className="card-title"><Nfc size={16} /> Placa NFC → Site</h3>
+          <p className="card-sub">Quem comprou a placa já te conhece: é o lead mais quente para vender o site.</p>
+          <div className="row wrap" style={{ gap: 26 }}>
+            <div><div className="dim" style={{ fontSize: 12 }}>Placas vendidas</div><div className="price accent">{plates.length}</div></div>
+            <div><div className="dim" style={{ fontSize: 12 }}>Faturamento</div><div className="price">{money(plateRevenue)}</div></div>
+            <div><div className="dim" style={{ fontSize: 12 }}>Viraram site</div><div className="price">{plateToSite}<span className="dim" style={{ fontSize: 13 }}> · {plates.length ? pct(plateToSite / plates.length) : '0%'}</span></div></div>
+          </div>
+          <div className="dim mt-s" style={{ fontSize: 12.5 }}>
+            {plates.length === 0 ? 'Venda a primeira placa na aba Rotas.' : plateToSite === 0 ? 'Nenhum virou site ainda. Ofereça depois de 7 dias, mostrando o crescimento das avaliações.' : `Cada placa vendida rendeu ${money(plateRevenue / Math.max(1, plates.length))} + ${pct(plateToSite / plates.length)} de chance de virar site.`}
+          </div>
+        </div>
+
+        <div className="glass pad">
+          <h3 className="card-title"><Flame size={16} className="accent" /> Oferecer o site agora</h3>
+          <p className="card-sub">Compraram a placa e ainda não têm site contigo, mais antigos primeiro.</p>
+          {hotPlates.length ? hotPlates.map((l) => {
+            const days = Math.floor((Date.now() - new Date(l.nfc!.at).getTime()) / 86_400_000)
+            return (
+              <div key={l.id} className="focus-item" style={{ gridTemplateColumns: '1fr auto' }} onClick={() => openLead(l)}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="lname">{l.name}</div>
+                  <div className="lmeta"><span className="accent">{days >= 7 ? 'Já pode oferecer o site' : `Placa há ${days} dia(s)`}</span>{l.nfc?.reviewsNow && l.nfc.reviewsAtSale ? ` · ${l.nfc.reviewsAtSale} → ${l.nfc.reviewsNow} avaliações` : ''}</div>
+                </div>
+                <span className={`tag ${days >= 7 ? 'lime' : ''}`}>{days >= 7 ? 'Ofereça' : 'Aguarde'}</span>
+              </div>
+            )
+          }) : <div className="dim">Nenhuma placa pendente.</div>}
+        </div>
       </div>
 
       <div className="grid g-2 mt top-align">

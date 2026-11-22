@@ -50,8 +50,27 @@ function benefit(lead: Lead, en = false): string {
   return en ? `with ${feat}` : `com ${feat}`
 }
 
-export function whatsappMessage(lead: Lead): string {
+const DAY = 86_400_000
+
+/** Mensagem para quem já comprou a placa NFC: usa o crescimento das avaliações como argumento. */
+export function postNfcMessage(lead: Lead, owner?: string): string {
+  const n = lead.nfc
+  const first = owner?.trim().split(/\s+/)[0]
+  const intro = `Oi, tudo bem? ${first ? `Aqui é ${first}, da` : 'Sou da'} placa de avaliação da ${lead.name}.`
+  let growth = 'Queria saber como estão chegando as avaliações novas pela placa.'
+  if (n?.reviewsNow && n.reviewsAtSale && n.reviewsNow > n.reviewsAtSale) {
+    const days = Math.round((Date.now() - new Date(n.at).getTime()) / DAY)
+    growth = `Dei uma olhada no Google de vocês: já são ${n.reviewsNow} avaliações (eram ${n.reviewsAtSale} quando instalei a placa, +${n.reviewsNow - n.reviewsAtSale}${days > 0 ? ` em ${days} dias` : ''}).`
+  }
+  const gap = lead.siteStatus === 'none' || lead.siteStatus === 'social' || lead.siteStatus === 'broken'
+    ? 'Quem vê essas avaliações costuma procurar o site antes de ir, mas hoje vocês não têm uma página própria pra mostrar.'
+    : 'Quem vê essas avaliações costuma procurar o site antes de ir, e a página de vocês hoje não passa a mesma confiança.'
+  return [intro, growth, gap, `Montei uma prévia de como ficaria a página de vocês, ${benefit(lead)}. Posso te mandar a imagem aqui?`].join('\n\n')
+}
+
+export function whatsappMessage(lead: Lead, owner?: string): string {
   if (lead.customMessage) return lead.customMessage
+  if (lead.nfc?.status === 'vendida') return postNfcMessage(lead, owner)
   if (lead.ai?.analysis.mensagem_whatsapp) return lead.ai.analysis.mensagem_whatsapp
   const nicheInfo = lead.nicheId ? NICHE_BY_ID[lead.nicheId] : undefined
   if (lead.market === 'US' && nicheInfo?.brazilianUS) {

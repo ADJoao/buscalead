@@ -1,4 +1,5 @@
 import type { PackageId } from './niches'
+import type { RouteState } from './route'
 import type { AiAnalysis, AiRunMeta, Market, SiteAudit, SiteStatus } from './shared/types'
 
 export type Stage = 'novo' | 'contatado' | 'respondeu' | 'reuniao' | 'proposta' | 'fechado' | 'perdido'
@@ -69,7 +70,17 @@ export interface Lead {
   lat?: number
   lng?: number
   /** placa NFC de avaliação: resultado da visita */
-  nfc?: { status: 'vendida' | 'voltar' | 'recusou'; at: string }
+  nfc?: {
+    status: 'vendida' | 'voltar' | 'recusou'
+    at: string
+    /** quanto você cobrou pela placa */
+    value?: number
+    /** avaliações no Google quando a placa foi instalada */
+    reviewsAtSale?: number
+    /** avaliações que você conferiu depois */
+    reviewsNow?: number
+    reviewsNowAt?: string
+  }
   /** resultado de busca que já está salvo no CRM */
   inCrm?: boolean
   demo?: boolean
@@ -86,6 +97,10 @@ export interface Settings {
   minRating: number
   includeWeakSites: boolean
   demoMode: boolean
+  /** preço que você cobra pela placa NFC (R$) */
+  nfcPrice: number
+  /** rota salva (sincroniza entre aparelhos) */
+  route?: RouteState
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -99,6 +114,7 @@ export const DEFAULT_SETTINGS: Settings = {
   minRating: 4.0,
   includeWeakSites: false,
   demoMode: false,
+  nfcPrice: 0,
 }
 
 /** Cliente fechado que ainda paga (sem cancelamento, ou cancelamento no futuro). */

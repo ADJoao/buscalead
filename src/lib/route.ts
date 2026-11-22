@@ -32,6 +32,8 @@ export interface RouteState {
   stops: Stop[]
   start?: Point
   travel: Travel
+  /** última alteração (o mais novo vence ao sincronizar entre aparelhos) */
+  at?: string
 }
 
 const KEY = 'bl.route'
@@ -41,7 +43,7 @@ export function loadRoute(): RouteState {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const r = JSON.parse(raw) as Partial<RouteState>
-      return { stops: r.stops ?? [], start: r.start, travel: r.travel ?? 'walking' }
+      return { stops: r.stops ?? [], start: r.start, travel: r.travel ?? 'walking', at: r.at }
     }
   } catch {
     /* sem armazenamento */

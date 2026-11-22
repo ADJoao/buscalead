@@ -70,7 +70,7 @@ export function LeadDrawer() {
 }
 
 function Header({ lead, saved }: { lead: Lead; saved: boolean }) {
-  const { openLead, saveLeads, toast, updateLead } = useStore()
+  const { openLead, saveLeads, toast, updateLead, settings } = useStore()
   const num = waNumber(lead.phoneIntl, lead.phone, lead.market)
   const mobile = isMobile(lead.phoneIntl, lead.market)
   const email = lead.email ?? lead.ai?.analysis.contatos_encontrados.email
@@ -127,7 +127,7 @@ function Header({ lead, saved }: { lead: Lead; saved: boolean }) {
         {num && (
           <a
             className="btn wa sm"
-            href={waLink(num, whatsappMessage(lead))}
+            href={waLink(num, whatsappMessage(lead, settings.ownerName))}
             target="_blank"
             rel="noreferrer"
             onClick={() => markContact('whatsapp', 'Mensagem enviada no WhatsApp')}
@@ -242,13 +242,34 @@ function Approach({ lead, saved }: { lead: Lead; saved: boolean }) {
   const num = waNumber(lead.phoneIntl, lead.phone, lead.market)
   const fu = followupMessage(lead)
   const em = emailMessage(lead)
-  useEffect(() => setMsg(whatsappMessage(lead)), [lead])
+  useEffect(() => setMsg(whatsappMessage(lead, settings.ownerName)), [lead, settings.ownerName])
+  const nfc = lead.nfc?.status === 'vendida' ? lead.nfc : undefined
+  const [nowReviews, setNowReviews] = useState(String(nfc?.reviewsNow ?? ''))
+  const growth = nfc?.reviewsNow && nfc.reviewsAtSale ? nfc.reviewsNow - nfc.reviewsAtSale : null
 
   return (
     <>
+      {nfc && (
+        <div className="block" style={{ borderColor: 'rgba(182,242,58,.3)', background: 'rgba(182,242,58,.05)' }}>
+          <h4><Sparkles size={15} className="accent" /> Ele comprou a placa: hora de oferecer o site</h4>
+          <p className="muted" style={{ margin: '0 0 10px', fontSize: 13.5 }}>
+            Ele já te conhece e confia. A prova mais forte é o crescimento das avaliações: confira no Google quantas ele tem hoje e preencha abaixo, que a mensagem usa o número.
+          </p>
+          <div className="row wrap" style={{ gap: 12, alignItems: 'flex-end' }}>
+            <div><div className="dim" style={{ fontSize: 12 }}>Na venda da placa</div><div className="mono" style={{ fontWeight: 650, fontSize: 18 }}>{nfc.reviewsAtSale ?? '-'}</div></div>
+            <label className="field" style={{ width: 130 }}><span>Avaliações hoje</span>
+              <input className="input mono" inputMode="numeric" value={nowReviews} onChange={(e) => setNowReviews(e.target.value.replace(/[^\d]/g, ''))} />
+            </label>
+            <button className="btn primary sm" disabled={!nowReviews || !saved}
+              onClick={() => { updateLead(lead.id, { nfc: { ...nfc, reviewsNow: Number(nowReviews), reviewsNowAt: new Date().toISOString() } }, { type: 'nota', text: `Avaliações conferidas: ${nowReviews}` }); toast('Salvo. A mensagem já usa o número.') }}>Atualizar</button>
+            {lead.mapsUrl && <a className="btn sm" href={lead.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={14} /> Ver no Google Maps</a>}
+            {growth !== null && <span className={`tag ${growth > 0 ? 'lime' : ''}`}>{growth > 0 ? `+${growth} avaliações` : 'sem aumento ainda'}</span>}
+          </div>
+        </div>
+      )}
       <div className="block">
         <div className="row spread">
-          <h4><MessageCircle size={15} style={{ color: '#6ff0a0' }} /> Primeira mensagem (WhatsApp)</h4>
+          <h4><MessageCircle size={15} style={{ color: '#6ff0a0' }} /> {nfc ? 'Mensagem para oferecer o site (WhatsApp)' : 'Primeira mensagem (WhatsApp)'}</h4>
           {lead.ai && <span className="tag violet"><Sparkles size={11} /> feita pela IA</span>}
         </div>
         <textarea className="textarea msg" rows={11} value={msg} onChange={(e) => setMsg(e.target.value)} style={{ width: '100%' }} />

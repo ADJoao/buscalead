@@ -34,14 +34,33 @@ interface SavedSearch {
 
 export function Routes() {
   const [tab, setTab] = useState<'buscar' | 'rota'>(() => (loadRoute().stops.length ? 'rota' : 'buscar'))
+  const { settings, saveSettings, mode } = useStore()
   const [route, setRouteState] = useState<RouteState>(loadRoute)
+  // salva no aparelho na hora e, com login, também na nuvem (para abrir a mesma rota no celular)
+  const saveRef = useRef(saveSettings)
+  saveRef.current = saveSettings
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const setRoute = useCallback((fn: (r: RouteState) => RouteState) => {
     setRouteState((r) => {
-      const next = fn(r)
+      const next: RouteState = { ...fn(r), at: new Date().toISOString() }
       saveRoute(next)
+      if (mode === 'supabase') {
+        clearTimeout(timer.current)
+        timer.current = setTimeout(() => saveRef.current({ route: next }), 900)
+      }
       return next
     })
-  }, [])
+  }, [mode])
+  // se a nuvem tem uma rota mais nova (feita em outro aparelho), usa ela
+  useEffect(() => {
+    const cloud = settings.route
+    if (mode !== 'supabase' || !cloud) return
+    setRouteState((local) => {
+      if ((cloud.at ?? '') <= (local.at ?? '')) return local
+      saveRoute(cloud)
+      return cloud
+    })
+  }, [settings.route, mode])
 
   return (
     <>
@@ -355,7 +374,7 @@ function minimalLead(s: Stop): Lead {
 }
 
 function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute: (fn: (r: RouteState) => RouteState) => void; goFind: () => void }) {
-  const { realLeads, saveLeads, updateLead, toast } = useStore()
+  const { realLeads, saveLeads, updateLead, toast, settings } = useStore()
   const [activeId, setActiveId] = useState<string>()
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<GeoHit[] | null>(null)
@@ -483,18 +502,26 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
     const next = s.status === status ? 'pendente' : status
     let leadId = s.leadId
     if (next === 'vendida' || next === 'voltar') {
-      const nfc = { status: next, at: new Date().toISOString() } as const
-      const note = next === 'vendida' ? 'Comprou a placa NFC de avaliação' : 'Placa NFC: voltar depois'
+      const at = new Date().toISOString()
+      const sold = next === 'vendida'
+      const nfc = {
+        status: next, at,
+        ...(sold && settings.nfcPrice ? { value: settings.nfcPrice } : {}),
+        ...(sold && s.reviews ? { reviewsAtSale: s.reviews } : {}),
+      } as const
+      // vendeu a placa: agenda a volta em 7 dias para oferecer o site
+      const nextActionAt = sold ? new Date(Date.now() + 7 * 86_400_000).toISOString() : undefined
+      const note = sold ? 'Comprou a placa NFC de avaliação' : 'Placa NFC: voltar depois'
       if (leadId && realLeads.some((l) => l.id === leadId)) {
         const cur = realLeads.find((l) => l.id === leadId)!
-        updateLead(leadId, { nfc, stage: cur.stage === 'novo' ? 'contatado' : cur.stage, contactedAt: cur.contactedAt ?? nfc.at }, { type: 'visita', text: note })
+        updateLead(leadId, { nfc, stage: cur.stage === 'novo' ? 'contatado' : cur.stage, contactedAt: cur.contactedAt ?? at, ...(nextActionAt ? { nextActionAt } : {}) }, { type: 'visita', text: note })
       } else {
         const base = s.draft ?? minimalLead(s)
-        const [created] = await saveLeads([{ ...base, nfc, stage: 'contatado', contactedAt: nfc.at, notes: `${note} (${new Date().toLocaleDateString('pt-BR')})` }])
+        const [created] = await saveLeads([{ ...base, nfc, stage: 'contatado', contactedAt: at, nextActionAt, notes: `${note} (${new Date().toLocaleDateString('pt-BR')})` }])
         leadId = created?.id ?? realLeads.find((l) => l.placeId && l.placeId === base.placeId)?.id
         if (leadId && !created) updateLead(leadId, { nfc }, { type: 'visita', text: note })
       }
-      toast(next === 'vendida' ? 'Placa vendida! Salvo no CRM para oferecer o site depois.' : 'Marcado para voltar. Está no CRM.')
+      toast(sold ? 'Placa vendida! Salvo no CRM. Volte em 7 dias para oferecer o site.' : 'Marcado para voltar. Está no CRM.')
     } else if (leadId && realLeads.some((l) => l.id === leadId) && next === 'recusou') {
       updateLead(leadId, { nfc: { status: 'recusou', at: new Date().toISOString() } }, { type: 'visita', text: 'Não quis a placa NFC' })
     }
@@ -641,6 +668,14 @@ function RoutePlanner({ route, setRoute, goFind }: { route: RouteState; setRoute
                       <a className="btn xs" href={placeUrl(s)} target="_blank" rel="noreferrer"><MapPin size={11} /> Maps</a>
                       <a className="btn xs" href={googleSearchUrl(s)} target="_blank" rel="noreferrer"><Globe size={11} /> Google</a>
                     </div>
+                    {s.status === 'vendida' && s.leadId && realLeads.some((l) => l.id === s.leadId) && (
+                      <label className="row mt-s" style={{ gap: 6, fontSize: 12.5 }} onClick={(e) => e.stopPropagation()}>
+                        <span className="muted">Cobrei R$</span>
+                        <input className="input mono" style={{ width: 90, height: 30 }} inputMode="numeric"
+                          defaultValue={realLeads.find((l) => l.id === s.leadId)?.nfc?.value ?? ''}
+                          onBlur={(e) => { const lead = realLeads.find((l) => l.id === s.leadId); if (lead?.nfc) updateLead(lead.id, { nfc: { ...lead.nfc, value: Number(e.target.value.replace(/[^\d]/g, '')) || undefined } }) }} />
+                      </label>
+                    )}
                     <div className="row wrap mt-s" style={{ gap: 6 }} onClick={(e) => e.stopPropagation()}>
                       {STATUS.map((st) => (
                         <button key={st.id} className={`btn xs ${s.status === st.id ? 'primary' : st.cls === 'ghost' ? 'ghost' : ''}`} onClick={() => setStatus(s, st.id)}>

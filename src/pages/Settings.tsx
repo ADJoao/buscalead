@@ -1,4 +1,4 @@
-import { Bot, CheckCircle2, Database, KeyRound, MapPinned, Sparkles, XCircle } from 'lucide-react'
+import { Bot, CheckCircle2, Database, Download, KeyRound, MapPinned, Sparkles, Upload, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/ui'
 import { AI_COST_USD } from '../components/LeadDrawer'
@@ -7,7 +7,7 @@ import { money, num } from '../lib/format'
 import { useStore } from '../lib/store'
 
 export function Settings() {
-  const { settings, saveSettings, mode } = useStore()
+  const { settings, saveSettings, mode, realLeads, restoreLeads, toast } = useStore()
   const [status, setStatus] = useState<{ google: boolean; apify: boolean; anthropic: boolean; supabase: boolean } | null | 'loading'>('loading')
   const [spendUsd, setSpendUsd] = useState<number | null>(null)
   const [form, setForm] = useState(settings)
@@ -18,6 +18,29 @@ export function Settings() {
     if (mode === 'supabase') aiUsage().then((u) => setSpendUsd(u?.monthUsd ?? null))
     else setSpendUsd(localAiSpend())
   }, [mode])
+
+  function exportBackup() {
+    const { route: _r, ...cfg } = settings
+    const blob = new Blob([JSON.stringify({ app: 'buscalead', version: 1, exportedAt: new Date().toISOString(), settings: cfg, leads: realLeads }, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `buscalead-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+    toast(`Backup salvo: ${realLeads.length} leads`)
+  }
+
+  async function importBackup(file?: File) {
+    if (!file) return
+    try {
+      const data = JSON.parse(await file.text()) as { app?: string; leads?: unknown }
+      if (data.app !== 'buscalead' || !Array.isArray(data.leads)) throw new Error('Esse arquivo não é um backup do BuscaLead.')
+      const n = await restoreLeads(data.leads as never[])
+      toast(n ? `${n} lead(s) restaurados` : 'Nada novo para restaurar')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Não consegui ler o arquivo.', true)
+    }
+  }
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
   const dirty = JSON.stringify(form) !== JSON.stringify(settings)
@@ -37,7 +60,7 @@ export function Settings() {
           <h1 className="page-title">Configurações</h1>
           <p className="page-sub">Seus dados, a IA e o limite de gasto.</p>
         </div>
-        {dirty && <button className="btn primary" onClick={() => saveSettings(form)}>Salvar alterações</button>}
+        {dirty && <button className="btn primary" onClick={() => { const { route: _r, ...rest } = form; saveSettings(rest) }}>Salvar alterações</button>}
       </div>
 
       <div className="grid g-2">
@@ -93,6 +116,7 @@ export function Settings() {
             <label className="field"><span>Seu nome</span><input className="input" value={form.ownerName} onChange={(e) => set('ownerName', e.target.value)} /></label>
             <label className="field"><span>Nome da agência</span><input className="input" value={form.agencyName} onChange={(e) => set('agencyName', e.target.value)} /></label>
             <label className="field"><span>Meta de MRR (R$/mês)</span><input className="input mono" type="number" value={form.mrrGoal} onChange={(e) => set('mrrGoal', Number(e.target.value))} /></label>
+            <label className="field"><span>Preço da placa NFC (R$)</span><input className="input mono" type="number" min={0} value={form.nfcPrice} onChange={(e) => set('nfcPrice', Number(e.target.value))} /></label>
           </div>
         </div>
 
@@ -106,6 +130,18 @@ export function Settings() {
           <div className="col mt">
             <Switch on={form.includeWeakSites} onChange={(v) => set('includeWeakSites', v)} label="Incluir empresas com site mediano" />
             <div className="dim" style={{ fontSize: 12.5 }}>Cota do Google usada este mês: <span className="mono">{num(placesUsage())}</span> requisições (≈ 1.000 grátis).</div>
+          </div>
+        </div>
+
+        <div className="glass pad">
+          <h3 className="card-title"><Download size={16} /> Backup dos seus dados</h3>
+          <p className="card-sub">Guarde uma cópia dos leads e clientes no seu computador, por segurança.</p>
+          <div className="row wrap">
+            <button className="btn sm" onClick={exportBackup}><Download size={14} /> Baixar backup ({realLeads.length} leads)</button>
+            <label className="btn sm" style={{ cursor: 'pointer' }}>
+              <Upload size={14} /> Restaurar de um arquivo
+              <input type="file" accept="application/json,.json" hidden onChange={(e) => { importBackup(e.target.files?.[0]); e.target.value = '' }} />
+            </label>
           </div>
         </div>
 
