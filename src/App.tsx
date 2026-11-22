@@ -3,12 +3,15 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { Splash } from './components/Splash'
 import { useStore } from './lib/store'
+import { Achievements } from './pages/Achievements'
+import { Agenda } from './pages/Agenda'
 import { Appearance } from './pages/Appearance'
 import { Dashboard } from './pages/Dashboard'
 import { Leads } from './pages/Leads'
 import { Login, NewPassword } from './pages/Login'
 import { Niches } from './pages/Niches'
 import { Pipeline } from './pages/Pipeline'
+import { Proposal } from './pages/Proposal'
 import { Prospect } from './pages/Prospect'
 import { Routes as RoutesPage } from './pages/Routes'
 import { Settings } from './pages/Settings'
@@ -33,6 +36,9 @@ export function App() {
           <Route path="nichos" element={<Niches />} />
           <Route path="config" element={<Settings />} />
           <Route path="personalizar" element={<Appearance />} />
+          <Route path="agenda" element={<Agenda />} />
+          <Route path="conquistas" element={<Achievements />} />
+          <Route path="proposta/:id" element={<Proposal />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       </Routes>

@@ -9,7 +9,7 @@ import { STAGES } from '../lib/types'
 export function ScoreRing({ score, size = 46, stroke = 4 }: { score: number; size?: number; stroke?: number }) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
-  const color = score >= 78 ? 'var(--accent)' : score >= 64 ? '#86c41f' : score >= 50 ? 'var(--warn)' : 'var(--text-3)'
+  const color = score >= 78 ? 'var(--accent)' : score >= 64 ? 'var(--accent-deep)' : score >= 50 ? 'var(--warn)' : 'var(--text-3)'
   return (
     <div className="ring" style={{ width: size, height: size }} title={`Pontuação ${score}/100`}>
       <svg width={size} height={size}>

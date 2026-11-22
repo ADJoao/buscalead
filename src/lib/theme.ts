@@ -127,6 +127,7 @@ export function applyAppearance(input: Partial<Appearance>) {
   st.setProperty('--accent-line', `rgba(${rgb.join(', ')}, 0.35)`)
   st.setProperty('--accent-glow', `rgba(${rgb.join(', ')}, 0.22)`)
   st.setProperty('--series-1', toHex(...mix(rgb, [0, 0, 0], 0.35)))
+  st.setProperty('--accent-deep', toHex(...mix(rgb, [0, 0, 0], 0.3)))
   const radius = { reto: [8, 6, 7], suave: [20, 12, 11], redondo: [28, 16, 999] }[a.corners]
   st.setProperty('--radius', radius[0] + 'px')
   st.setProperty('--radius-sm', radius[1] + 'px')
@@ -142,6 +143,9 @@ export function applyAppearance(input: Partial<Appearance>) {
   root.dataset.motion = a.motion
   root.dataset.spotlight = a.spotlight ? 'on' : 'off'
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#060807')
+  // ícone da aba do navegador na cor escolhida
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0b0f0d"/><circle cx="28" cy="28" r="13" fill="none" stroke="${a.accent}" stroke-width="6"/><path d="M38 38l12 12" stroke="${a.accent}" stroke-width="7" stroke-linecap="round"/></svg>`
+  document.querySelector('link[rel="icon"]')?.setAttribute('href', `data:image/svg+xml,${encodeURIComponent(svg)}`)
   listeners.forEach((fn) => fn(a))
 }
 

@@ -98,6 +98,8 @@ export interface Settings {
   includeWeakSites: boolean
   demoMode: boolean
   appearance?: Partial<import('./theme').Appearance>
+  /** seu WhatsApp, para o rodapé da proposta */
+  ownerPhone?: string
   /** preço que você cobra pela placa NFC (R$) */
   nfcPrice: number
   /** rota salva (sincroniza entre aparelhos) */

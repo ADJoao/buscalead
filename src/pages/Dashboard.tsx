@@ -190,8 +190,8 @@ export function Dashboard() {
             <div>
               <h3 className="card-title">Faturamento</h3>
               <p className="card-sub" style={{ marginBottom: 0 }}>
-                {view === 'ano' ? `Ano de ${year}` : 'Últimos 12 meses'} · <b className="mono" style={{ color: 'var(--text)' }}>{money(revenueTotal)}</b>
-                {elapsed > 0 && <> · média {money(revenueTotal / elapsed)}/mês</>}
+                {view === 'ano' ? `Ano de ${year}` : 'Últimos 12 meses'} · <b className="mono money" style={{ color: 'var(--text)' }}>{money(revenueTotal)}</b>
+                {elapsed > 0 && <> · média <span className="money">{money(revenueTotal / elapsed)}</span>/mês</>}
               </p>
             </div>
             <div className="row wrap" style={{ gap: 8 }}>
@@ -268,10 +268,10 @@ export function Dashboard() {
               </select>
             </label>
             <div className="row wrap" style={{ gap: 22 }}>
-              <div><div className="dim" style={{ fontSize: 11.5 }}>Total do mês</div><div className="mono" style={{ fontWeight: 650, fontSize: 16 }}>{money(sel.total ?? 0)}</div></div>
-              <div><div className="dim" style={{ fontSize: 11.5 }}>Mensalidades</div><div className="mono" style={{ fontSize: 16 }}>{money(sel.mensal ?? 0)}</div></div>
-              <div><div className="dim" style={{ fontSize: 11.5 }}>Setup</div><div className="mono" style={{ fontSize: 16 }}>{money(sel.setup ?? 0)}</div></div>
-              {(sel.placa ?? 0) > 0 && <div><div className="dim" style={{ fontSize: 11.5 }}>Placas NFC</div><div className="mono" style={{ fontSize: 16 }}>{money(sel.placa ?? 0)}</div></div>}
+              <div><div className="dim" style={{ fontSize: 11.5 }}>Total do mês</div><div className="mono money" style={{ fontWeight: 650, fontSize: 16 }}>{money(sel.total ?? 0)}</div></div>
+              <div><div className="dim" style={{ fontSize: 11.5 }}>Mensalidades</div><div className="mono money" style={{ fontSize: 16 }}>{money(sel.mensal ?? 0)}</div></div>
+              <div><div className="dim" style={{ fontSize: 11.5 }}>Setup</div><div className="mono money" style={{ fontSize: 16 }}>{money(sel.setup ?? 0)}</div></div>
+              {(sel.placa ?? 0) > 0 && <div><div className="dim" style={{ fontSize: 11.5 }}>Placas NFC</div><div className="mono money" style={{ fontSize: 16 }}>{money(sel.placa ?? 0)}</div></div>}
               <div><div className="dim" style={{ fontSize: 11.5 }}>Novos clientes</div><div className="mono" style={{ fontSize: 16 }}>{sel.novos}</div></div>
             </div>
           </div>
@@ -321,7 +321,7 @@ export function Dashboard() {
           <p className="card-sub">Quem comprou a placa já te conhece: é o lead mais quente para vender o site.</p>
           <div className="row wrap" style={{ gap: 26 }}>
             <div><div className="dim" style={{ fontSize: 12 }}>Placas vendidas</div><div className="price accent">{plates.length}</div></div>
-            <div><div className="dim" style={{ fontSize: 12 }}>Faturamento</div><div className="price">{money(plateRevenue)}</div></div>
+            <div><div className="dim" style={{ fontSize: 12 }}>Faturamento</div><div className="price money">{money(plateRevenue)}</div></div>
             <div><div className="dim" style={{ fontSize: 12 }}>Viraram site</div><div className="price">{plateToSite}<span className="dim" style={{ fontSize: 13 }}> · {plates.length ? pct(plateToSite / plates.length) : '0%'}</span></div></div>
           </div>
           <div className="dim mt-s" style={{ fontSize: 12.5 }}>
@@ -357,9 +357,9 @@ export function Dashboard() {
             <ScoreRing score={Math.round(goalPct * 100)} size={72} stroke={6} />
           </div>
           <div className="row wrap" style={{ gap: 26 }}>
-            <div><div className="dim" style={{ fontSize: 12 }}>Atual</div><div className="price accent">{money(mrr)}</div></div>
-            <div><div className="dim" style={{ fontSize: 12 }}>Meta</div><div className="price">{money(settings.mrrGoal)}</div></div>
-            <div><div className="dim" style={{ fontSize: 12 }}>Faltam</div><div className="price">{money(Math.max(0, settings.mrrGoal - mrr))}</div></div>
+            <div><div className="dim" style={{ fontSize: 12 }}>Atual</div><div className="price accent money">{money(mrr)}</div></div>
+            <div><div className="dim" style={{ fontSize: 12 }}>Meta</div><div className="price money">{money(settings.mrrGoal)}</div></div>
+            <div><div className="dim" style={{ fontSize: 12 }}>Faltam</div><div className="price money">{money(Math.max(0, settings.mrrGoal - mrr))}</div></div>
           </div>
           <div className="dim mt-s" style={{ fontSize: 12.5 }}>
             {mrr < settings.mrrGoal && active.length > 0
@@ -381,8 +381,8 @@ export function Dashboard() {
                 <div className="lmeta">{l.nicheLabel} · {l.city}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div className="mono" style={{ fontWeight: 600 }}>{money(l.deal.setup ?? 0, l.currency)}</div>
-                <div className="mono accent" style={{ fontSize: 12 }}>+{money(l.deal.monthly ?? 0, l.currency)}/mês</div>
+                <div className="mono money" style={{ fontWeight: 600 }}>{money(l.deal.setup ?? 0, l.currency)}</div>
+                <div className="mono accent money" style={{ fontSize: 12 }}>+{money(l.deal.monthly ?? 0, l.currency)}/mês</div>
               </div>
             </div>
           ))}

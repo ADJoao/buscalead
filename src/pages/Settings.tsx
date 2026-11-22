@@ -1,4 +1,4 @@
-import { Palette, Bot, CheckCircle2, Database, Download, KeyRound, MapPinned, Sparkles, Upload, XCircle } from 'lucide-react'
+import { Gem, Trophy, Palette, Bot, CheckCircle2, Database, Download, KeyRound, MapPinned, Sparkles, Upload, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Switch } from '../components/ui'
@@ -62,8 +62,10 @@ export function Settings() {
           <h1 className="page-title">Configurações</h1>
           <p className="page-sub">Seus dados, a IA e o limite de gasto.</p>
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <Link to="/personalizar" className="btn"><Palette size={15} /> Personalizar visual e sons</Link>
+          <Link to="/conquistas" className="btn show-sm"><Trophy size={15} /> Conquistas</Link>
+          <Link to="/nichos" className="btn show-sm"><Gem size={15} /> Nichos</Link>
           {dirty && <button className="btn primary" onClick={() => { const { route: _r, appearance: _a, ...rest } = form; saveSettings(rest) }}>Salvar alterações</button>}
         </div>
       </div>

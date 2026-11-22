@@ -1,8 +1,9 @@
 import {
-  ArrowUp, Bot, Calendar, Check, ClipboardCopy, Copy, ExternalLink, Globe, AtSign, Loader2, Mail, MapPin,
+  ArrowUp, Bot, Calendar, Check, ClipboardCopy, Copy, ExternalLink, FileText, Globe, AtSign, Loader2, Mail, MapPin,
   MessageCircle, Phone, Plus, Sparkles, Target, Trash2, TriangleAlert, X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { LeadForm } from './LeadForm'
 import { analyzeLead, localAiSpend } from '../lib/api'
 import { dateBR, money, relTime } from '../lib/format'
@@ -152,6 +153,11 @@ function Header({ lead, saved }: { lead: Lead; saved: boolean }) {
         )}
         {validInsta && (
           <a className="btn sm" href={`https://instagram.com/${insta}`} target="_blank" rel="noreferrer"><AtSign size={15} /> @{insta}</a>
+        )}
+        {saved && (
+          <Link className="btn sm" to={`/proposta/${lead.id}`} onClick={() => openLead(null)} style={{ borderColor: 'var(--accent-line)' }}>
+            <FileText size={15} /> Gerar proposta
+          </Link>
         )}
         {lead.mapsUrl && <a className="btn sm" href={lead.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={15} /> Maps</a>}
         {lead.website && <a className="btn sm" href={lead.website} target="_blank" rel="noreferrer"><Globe size={15} /> {lead.deliveredSite ? 'Site antigo' : 'Site'}</a>}
