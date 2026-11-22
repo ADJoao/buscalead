@@ -7,12 +7,42 @@ import { instagramHandle, isSocialUrl } from './shared/site'
 import type { Market, PlaceResult } from './shared/types'
 import type { Lead } from './types'
 
-/** Tipos de negócio com atendimento no balcão, bons para placa de avaliação. */
-export const NFC_TYPES = [
-  'restaurante', 'pizzaria', 'hamburgueria', 'lanchonete', 'padaria', 'cafeteria', 'açaí', 'sorveteria',
-  'barbearia', 'salão de beleza', 'manicure', 'clínica de estética', 'pet shop', 'academia', 'ótica',
-  'loja de roupas', 'loja de calçados', 'farmácia', 'mercado', 'oficina mecânica', 'lava jato', 'dentista',
+/**
+ * Tipos de negócio para a placa de avaliação, agrupados pelo peso que a avaliação
+ * tem na escolha do cliente. Regra: quanto mais o cliente COMPARA no Google Maps antes
+ * de ir (não conhece, é turista, tem medo de errar, o serviço é caro ou mexe com o corpo),
+ * mais as estrelas e a quantidade de avaliações decidem a venda.
+ */
+export const NFC_TIERS: { id: string; label: string; hint: string; types: string[] }[] = [
+  {
+    id: 'decide',
+    label: 'Avaliação decide a venda',
+    hint: 'o cliente compara no Maps antes de ir',
+    types: [
+      'passeio de barco', 'restaurante', 'pizzaria', 'hamburgueria', 'quiosque de praia',
+      'estúdio de tatuagem', 'clínica de estética', 'design de sobrancelha', 'extensão de cílios',
+      'dentista', 'veterinário', 'banho e tosa', 'oficina mecânica', 'assistência técnica de celular',
+      'barbearia', 'salão de beleza', 'escola de surf', 'aluguel de bicicleta',
+    ],
+  },
+  {
+    id: 'ajuda',
+    label: 'Ajuda bastante',
+    hint: 'pesa na escolha, mas não sozinha',
+    types: [
+      'açaí', 'sorveteria', 'cafeteria', 'manicure', 'lava jato', 'auto elétrica', 'chaveiro',
+      'pet shop', 'academia', 'fisioterapia', 'ótica', 'loja de surf', 'adega', 'lanchonete',
+    ],
+  },
+  {
+    id: 'pouco',
+    label: 'Pouco efeito',
+    hint: 'o cliente escolhe pela distância',
+    types: ['padaria', 'mercado', 'farmácia', 'loja de roupas', 'loja de calçados'],
+  },
 ]
+
+export const NFC_TYPES = NFC_TIERS.flatMap((t) => t.types)
 
 export interface ReviewParams {
   market: Market

@@ -9,7 +9,7 @@ import { geocode, searchPlacesBatch, serverStatus, type GeoHit, type PlaceHit } 
 import { uid } from '../lib/format'
 import { CITIES, MARKET_INFO } from '../lib/locations'
 import { waLink, waNumber } from '../lib/phone'
-import { NFC_TYPES, buildReviewQueries, prospectToLead, runReviewSearch, type Prospect } from '../lib/reviewSearch'
+import { NFC_TIERS, NFC_TYPES, buildReviewQueries, prospectToLead, runReviewSearch, type Prospect } from '../lib/reviewSearch'
 import {
   directionsTo, fmtKm, fullRouteUrl, googleSearchUrl, km, legKm, loadRoute, minutes, optimize, placeUrl, saveRoute,
   type RouteState, type Stop, type StopStatus,
@@ -92,7 +92,7 @@ function FindPlaces({ route, setRoute, goRoute }: { route: RouteState; setRoute:
   const [cityIds, setCityIds] = useState<string[]>(['cabo-frio'])
   const [customCity, setCustomCity] = useState('')
   const [areas, setAreas] = useState<Record<string, string[]>>({})
-  const [terms, setTerms] = useState<string[]>(['restaurante', 'barbearia', 'salão de beleza'])
+  const [terms, setTerms] = useState<string[]>(['restaurante', 'barbearia', 'clínica de estética'])
   const [extraTerm, setExtraTerm] = useState('')
   const [minRating, setMinRating] = useState(4.5)
   const [minReviews, setMinReviews] = useState(5)
@@ -234,11 +234,23 @@ function FindPlaces({ route, setRoute, goRoute }: { route: RouteState; setRoute:
 
         <div className="field mt">
           <span>Tipo de negócio <span className="dim">(com balcão e cliente presencial)</span></span>
-          <div className="chips">
-            {[...new Set([...NFC_TYPES, ...terms])].map((t) => (
-              <button key={t} className={`chip ${terms.includes(t) ? 'on' : ''}`} onClick={() => setTerms((l) => toggle(l, t))}>{t}</button>
-            ))}
-          </div>
+          {NFC_TIERS.map((tier) => (
+            <div key={tier.id} className={`nfc-tier ${tier.id}`}>
+              <div className="nfc-tier-head"><b>{tier.label}</b> <span className="dim">· {tier.hint}</span></div>
+              <div className="chips">
+                {tier.types.map((t) => (
+                  <button key={t} className={`chip ${terms.includes(t) ? 'on' : ''}`} onClick={() => setTerms((l) => toggle(l, t))}>{t}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+          {terms.some((t) => !NFC_TYPES.includes(t)) && (
+            <div className="chips mt-s">
+              {terms.filter((t) => !NFC_TYPES.includes(t)).map((t) => (
+                <button key={t} className="chip on" onClick={() => setTerms((l) => toggle(l, t))}>{t}</button>
+              ))}
+            </div>
+          )}
           <form className="row mt-s" style={{ maxWidth: 380 }} onSubmit={(e) => { e.preventDefault(); const t = extraTerm.trim().toLowerCase(); if (t) { setTerms((l) => (l.includes(t) ? l : [...l, t])); setExtraTerm('') } }}>
             <input className="input" placeholder="Outro tipo (ex.: floricultura)" value={extraTerm} onChange={(e) => setExtraTerm(e.target.value)} />
             <button className="btn sm" type="submit"><Plus size={14} /></button>

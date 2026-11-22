@@ -630,3 +630,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* mapa escuro a partir do mapa aberto (sem chave de API) */
 .route-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.5); }
+
+.nfc-tier { margin-top: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line, rgba(255,255,255,.08)); }
+.nfc-tier-head { font-size: 12.5px; margin-bottom: 8px; }
+.nfc-tier.decide { border-color: rgba(182,242,58,.35); background: rgba(182,242,58,.05); }
+.nfc-tier.decide .nfc-tier-head b { color: #b6f23a; }
+.nfc-tier.pouco { opacity: .7; }
